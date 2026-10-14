@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import SlotReel from "./SlotReel";
 import { motion } from "framer-motion";
 import { Howl } from "howler";
+import { Icon } from "@iconify/react";
 import "./SlotMachine.css";
 
 const CursedSlotMachine = forwardRef(
@@ -84,17 +85,25 @@ const CursedSlotMachine = forwardRef(
     };
 
     return (
-      <div className="slot-machine-cabinet cursed">
+      <div className={`slot-machine-cabinet cursed ${spinning ? "is-spinning" : ""}`}>
         {/* Arcade Marquee Header */}
         <div className="marquee-bar cursed">
           <div className="marquee-indicator cursed" />
           <motion.div
-            className="marquee-text cursed"
+            className="marquee-text cursed flex items-center justify-center gap-2"
             initial={{ opacity: 0.9 }}
             animate={{ opacity: [0.75, 1, 0.75] }}
             transition={{ duration: 1.2, repeat: Infinity }}
           >
-            {displayText || "💀 CURSED REELS ACTIVATED 💀"}
+            {displayText ? (
+              displayText
+            ) : (
+              <>
+                <Icon icon="game-icons:skull-crossed-bones" className="text-ui-cursed inline-block" />
+                <span>CURSED REELS ACTIVATED</span>
+                <Icon icon="game-icons:skull-crossed-bones" className="text-ui-cursed inline-block" />
+              </>
+            )}
           </motion.div>
           <div className="marquee-indicator cursed" />
         </div>

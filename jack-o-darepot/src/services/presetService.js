@@ -3,7 +3,8 @@ const PRESETS_STORAGE_KEY = "jackopot_setting_presets_v2";
 export const BUILT_IN_PRESETS = [
   {
     id: "balatro_hypnotic",
-    name: "🃏 Balatro Hypnotic Swirl",
+    name: "Balatro Hypnotic Swirl",
+    icon: "game-icons:card-random",
     description: "Psychedelic card swirl with Lospec Hot Pink dithered tones",
     settings: {
       reactiveBackground: true,
@@ -38,7 +39,8 @@ export const BUILT_IN_PRESETS = [
   },
   {
     id: "jack_o_rave",
-    name: "🎃 Jack-o-Rave (Heavy Bass)",
+    name: "Jack-o-Rave (Heavy Bass)",
+    icon: "game-icons:jack-o-lantern",
     description: "Explosive flame waves with intense subwoofer screen shake",
     settings: {
       reactiveBackground: true,
@@ -73,7 +75,8 @@ export const BUILT_IN_PRESETS = [
   },
   {
     id: "zero_delay_raw",
-    name: "⚡ Zero-Delay Competitive",
+    name: "Zero-Delay Competitive",
+    icon: "game-icons:lightning-arc",
     description: "Pure raw real-time audio reactivity with 0ms averaging delay",
     settings: {
       reactiveBackground: true,
@@ -101,7 +104,8 @@ export const BUILT_IN_PRESETS = [
   },
   {
     id: "demonic_blood_chasm",
-    name: "💀 Demonic Crimson Chasm",
+    name: "Demonic Crimson Chasm",
+    icon: "game-icons:skull-crossed-bones",
     description: "Deep cursed blood vortex with dark red dithered distortion",
     settings: {
       reactiveBackground: true,
@@ -129,7 +133,8 @@ export const BUILT_IN_PRESETS = [
   },
   {
     id: "gameboy_lofi",
-    name: "🕹️ GameBoy 1989 Lo-Fi",
+    name: "GameBoy 1989 Lo-Fi",
+    icon: "game-icons:game-console",
     description: "Retro 4-shade pea green perspective grid with chunky pixels",
     settings: {
       reactiveBackground: true,
@@ -157,7 +162,8 @@ export const BUILT_IN_PRESETS = [
   },
   {
     id: "toxic_acid_hazard",
-    name: "🧪 Acid Hazard Slime",
+    name: "Acid Hazard Slime",
+    icon: "game-icons:poison-bottle",
     description: "Electric neon biohazard green vortex with high contrast",
     settings: {
       reactiveBackground: true,
@@ -185,7 +191,8 @@ export const BUILT_IN_PRESETS = [
   },
   {
     id: "midnight_synth_grid",
-    name: "🌌 Midnight Synth Outrun",
+    name: "Midnight Synth Outrun",
+    icon: "game-icons:sunglasses",
     description: "Neon magenta and cyan retro cyber grid with fast scrolling",
     settings: {
       reactiveBackground: true,
@@ -213,7 +220,8 @@ export const BUILT_IN_PRESETS = [
   },
   {
     id: "gothic_crypt_fog",
-    name: "🦇 Castlevania Crypt Fog",
+    name: "Castlevania Crypt Fog",
+    icon: "game-icons:coffin",
     description: "Atmospheric haunted lavender & bone fog with smooth organic plasma",
     settings: {
       reactiveBackground: true,

@@ -13,10 +13,14 @@
     "electron:preview": "vite build && electron ."
   },
   "dependencies": {
+    "@iconify-json/game-icons": "^1.2.4",
+    "@iconify/react": "^6.0.2",
+    "@tailwindcss/vite": "^4.3.3",
     "framer-motion": "^12.23.24",
     "howler": "^2.2.4",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

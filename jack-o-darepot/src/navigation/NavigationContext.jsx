@@ -50,6 +50,13 @@ export function NavigationProvider({ initialScreen = SCREENS.GAME, children }) {
         } else {
           navigate(SCREENS.COLLECTION);
         }
+      } else if ((e.key === "l" || e.key === "L") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        if (currentScreen === SCREENS.LEADERBOARD) {
+          goBack();
+        } else {
+          navigate(SCREENS.LEADERBOARD);
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -59,7 +66,7 @@ export function NavigationProvider({ initialScreen = SCREENS.GAME, children }) {
   const screenConfig = SCREEN_CONFIG[currentScreen] || {
     id: currentScreen,
     title: "Screen",
-    icon: "📄",
+    icon: "game-icons:scroll-unfurled",
   };
 
   return (

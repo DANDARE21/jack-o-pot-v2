@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   curseIncrement: 10, // in percent
   maxCurseCap: 100, // in percent
   fastSpinMode: false,
+  spinExpansionScale: 1.13, // 1.0 (no expansion) to 1.40 (40% expansion)
 
   // Desktop & Display
   desktopNotifications: true,
@@ -50,4 +51,15 @@ export const DEFAULT_SETTINGS = {
   lowsBaseThreshold: 0.15, // Minimum bass energy to trigger shake (0.0 = sensitive to all bass)
   midsBaseScale: 0.25, // Resting logo size during silence (0.05 to 0.50)
   highsBaseDrift: 0.15, // Resting shader motion drift during silence (0.0 = stops dead on silence)
+
+  // Retro 8-bit UI Styles & Colors
+  uiThemePreset: "jack_o_flame", // Theme key or 'custom'
+  uiSyncWithBackground: true, // Auto-sync UI colors with background palette
+  uiAccentColor: "#ff6200", // Main accent
+  uiAccentHover: "#ff8533", // Secondary / hover
+  uiAccentGlow: "#ffaa44", // Text highlight / glow
+  uiBgSurface: "#110e19", // Main surface / cabinet background
+  uiBorderColor: "#ff6200", // Primary UI border
+  uiTextColor: "#f8f8fc", // High-contrast body text
+  uiCursedColor: "#ff1744", // Curse / hazard red
 };

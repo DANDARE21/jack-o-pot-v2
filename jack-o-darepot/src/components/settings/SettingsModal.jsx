@@ -3,6 +3,7 @@ import { useSettings } from "../../context/SettingsContext";
 import { useGame } from "../../context/GameContext";
 import { useElectron } from "../../hooks/useElectron";
 import { Howl } from "howler";
+import { Icon } from "@iconify/react";
 import {
   SettingSection,
   SettingRow,
@@ -57,7 +58,7 @@ export default function SettingsModal({
     if (res?.data && Array.isArray(res.data)) {
       setPlayers?.(res.data);
       showNotification({
-        title: "🎃 Players Imported",
+        title: "Players Imported",
         body: `Successfully imported ${res.data.length} players!`,
       });
     } else if (res?.error) {
@@ -75,7 +76,7 @@ export default function SettingsModal({
       .then((data) => {
         setPlayers?.(data);
         showNotification({
-          title: "🔄 Players Reset",
+          title: "Players Reset",
           body: "Restored default players list.",
         });
       })
@@ -87,7 +88,7 @@ export default function SettingsModal({
     if (res?.data && typeof res.data === "object") {
       setGamesByCategory?.(res.data);
       showNotification({
-        title: "🎃 Games Imported",
+        title: "Games Imported",
         body: "Successfully imported games catalog!",
       });
     } else if (res?.error) {
@@ -105,7 +106,7 @@ export default function SettingsModal({
       .then((data) => {
         setGamesByCategory?.(data);
         showNotification({
-          title: "🔄 Games Catalog Reset",
+          title: "Games Catalog Reset",
           body: "Restored default games catalog.",
         });
       })
@@ -129,12 +130,12 @@ export default function SettingsModal({
       <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="settings-header">
-          <div className="settings-title-wrap">
-            <span className="settings-title-icon">⚙️</span>
+          <div className="settings-title-wrap flex items-center">
+            <Icon icon="game-icons:gears" className="settings-title-icon text-ui-accent text-2xl mr-2" />
             <h2 className="settings-title">SETTINGS & CONFIGURATION</h2>
           </div>
           <button className="settings-close-btn" onClick={onClose} title="Close Settings">
-            ✕
+            <Icon icon="game-icons:cancel" className="text-base" />
           </button>
         </div>
 
@@ -144,25 +145,25 @@ export default function SettingsModal({
             className={`settings-tab-btn ${activeTab === "data" ? "active" : ""}`}
             onClick={() => setActiveTab("data")}
           >
-            <span>📁</span> Data & Content
+            <Icon icon="game-icons:open-folder" className="inline-block mr-1 text-ui-accent" /> Data & Content
           </button>
           <button
             className={`settings-tab-btn ${activeTab === "game" ? "active" : ""}`}
             onClick={() => setActiveTab("game")}
           >
-            <span>⚡</span> Curse & Game Rules
+            <Icon icon="game-icons:lightning-trio" className="inline-block mr-1 text-ui-accent" /> Curse & Game Rules
           </button>
           <button
             className={`settings-tab-btn ${activeTab === "audio" ? "active" : ""}`}
             onClick={() => setActiveTab("audio")}
           >
-            <span>🔊</span> Audio & FX
+            <Icon icon="game-icons:speaker" className="inline-block mr-1 text-ui-accent" /> Audio & FX
           </button>
           <button
             className={`settings-tab-btn ${activeTab === "desktop" ? "active" : ""}`}
             onClick={() => setActiveTab("desktop")}
           >
-            <span>🖥️</span> Desktop & Display
+            <Icon icon="game-icons:retro-controller" className="inline-block mr-1 text-ui-accent" /> Desktop & Display
           </button>
         </div>
 
@@ -173,7 +174,7 @@ export default function SettingsModal({
             <>
               <SettingSection
                 title="Player Roster"
-                icon="👥"
+                icon="game-icons:crowd"
                 description="Manage the list of victims and challengers in the Darepot."
               >
                 <SettingRow
@@ -184,19 +185,19 @@ export default function SettingsModal({
                   <div style={{ display: "flex", gap: "8px" }}>
                     <SettingButton
                       label="Import JSON"
-                      icon="📥"
+                      icon="game-icons:download"
                       variant="primary"
                       onClick={handleImportPlayers}
                     />
                     <SettingButton
                       label="Export"
-                      icon="📤"
+                      icon="game-icons:upload"
                       variant="secondary"
                       onClick={handleExportPlayers}
                     />
                     <SettingButton
                       label="Reset Defaults"
-                      icon="🔄"
+                      icon="game-icons:anticlockwise-rotation"
                       variant="secondary"
                       onClick={handleResetPlayers}
                     />
@@ -206,7 +207,7 @@ export default function SettingsModal({
 
               <SettingSection
                 title="Games & Categories"
-                icon="🎮"
+                icon="game-icons:retro-controller"
                 description="Manage the horrors and challenges in the game pool."
               >
                 <SettingRow
@@ -217,19 +218,19 @@ export default function SettingsModal({
                   <div style={{ display: "flex", gap: "8px" }}>
                     <SettingButton
                       label="Import JSON"
-                      icon="📥"
+                      icon="game-icons:download"
                       variant="primary"
                       onClick={handleImportGames}
                     />
                     <SettingButton
                       label="Export"
-                      icon="📤"
+                      icon="game-icons:upload"
                       variant="secondary"
                       onClick={handleExportGames}
                     />
                     <SettingButton
                       label="Reset Defaults"
-                      icon="🔄"
+                      icon="game-icons:anticlockwise-rotation"
                       variant="secondary"
                       onClick={handleResetGames}
                     />
@@ -240,7 +241,7 @@ export default function SettingsModal({
               {isElectron && (
                 <SettingSection
                   title="Local Application Data"
-                  icon="📂"
+                  icon="game-icons:open-folder"
                   description="Direct access to your desktop config and storage folder."
                 >
                   <SettingRow
@@ -249,7 +250,7 @@ export default function SettingsModal({
                   >
                     <SettingButton
                       label="Open Data Folder"
-                      icon="📂"
+                      icon="game-icons:open-folder"
                       variant="secondary"
                       onClick={openUserDataFolder}
                     />
@@ -264,7 +265,7 @@ export default function SettingsModal({
             <>
               <SettingSection
                 title="Spin Pace & Animation"
-                icon="⏱️"
+                icon="game-icons:stopwatch"
                 description="Adjust reel pacing for your streaming or party environment."
               >
                 <SettingRow
@@ -281,7 +282,7 @@ export default function SettingsModal({
 
               <SettingSection
                 title="Curse Mechanics & Risk"
-                icon="💀"
+                icon="game-icons:skull-crossed-bones"
                 description="Fine tune how fast the slot machine turns against you."
               >
                 <SettingRow
@@ -326,7 +327,7 @@ export default function SettingsModal({
 
               <SettingSection
                 title="Reset Counters"
-                icon="⚠️"
+                icon="game-icons:hazard-sign"
                 description="Clear session counters if starting a new game night."
               >
                 <SettingRow
@@ -335,7 +336,7 @@ export default function SettingsModal({
                 >
                   <SettingButton
                     label="Reset Curse"
-                    icon="💀"
+                    icon="game-icons:skull-crossed-bones"
                     variant="danger"
                     onClick={onResetCurse}
                   />
@@ -347,7 +348,7 @@ export default function SettingsModal({
                 >
                   <SettingButton
                     label="Reset Spins"
-                    icon="🌀"
+                    icon="game-icons:anticlockwise-rotation"
                     variant="danger"
                     onClick={onResetSpins}
                   />
@@ -361,7 +362,7 @@ export default function SettingsModal({
             <>
               <SettingSection
                 title="Master Audio"
-                icon="🔊"
+                icon="game-icons:speaker"
                 description="Control sound effects and haunted ambient audio."
               >
                 <SettingRow
@@ -395,7 +396,7 @@ export default function SettingsModal({
                 >
                   <SettingButton
                     label="Play Test Sound"
-                    icon="🔊"
+                    icon="game-icons:speaker"
                     variant="secondary"
                     disabled={!settings.masterSound}
                     onClick={handleTestSound}
@@ -405,7 +406,7 @@ export default function SettingsModal({
 
               <SettingSection
                 title="System Audio"
-                icon="🔔"
+                icon="game-icons:bell"
                 description="Desktop native alerts and haptics."
               >
                 <SettingRow
@@ -426,7 +427,7 @@ export default function SettingsModal({
             <>
               <SettingSection
                 title="Desktop Features"
-                icon="🖥️"
+                icon="game-icons:game-console"
                 description="System level integrations for the standalone app."
               >
                 <SettingRow
@@ -446,7 +447,7 @@ export default function SettingsModal({
                 >
                   <SettingButton
                     label="Toggle Fullscreen"
-                    icon="🖥️"
+                    icon="game-icons:expand"
                     variant="secondary"
                     onClick={toggleFullscreen}
                   />
@@ -455,7 +456,7 @@ export default function SettingsModal({
 
               <SettingSection
                 title="Atmospheric Visuals"
-                icon="🎃"
+                icon="game-icons:jack-o-lantern"
                 description="Customize ambient effects and vignettes."
               >
                 <SettingRow
@@ -476,7 +477,7 @@ export default function SettingsModal({
 
               <SettingSection
                 title="System Info"
-                icon="ℹ️"
+                icon="game-icons:info"
                 description="Runtime specifications."
               >
                 <SettingRow
@@ -497,13 +498,13 @@ export default function SettingsModal({
         <div className="settings-footer">
           <SettingButton
             label="Reset All Settings"
-            icon="🔄"
+            icon="game-icons:anticlockwise-rotation"
             variant="danger"
             onClick={resetSettings}
           />
           <SettingButton
             label="Save & Close"
-            icon="✓"
+            icon="game-icons:check-mark"
             variant="primary"
             onClick={onClose}
           />

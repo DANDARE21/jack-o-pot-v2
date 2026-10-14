@@ -11,6 +11,7 @@ import {
   SettingSlider,
   SettingSelect,
   SettingButton,
+  SettingColorPicker,
 } from "../components/settings/SettingControls";
 import {
   BUILT_IN_PRESETS,
@@ -23,6 +24,8 @@ import {
   LOGO_TEXTURE_OPTIONS,
   getLogoTextureUrl,
 } from "../services/webglShader";
+import { UI_THEMES } from "../services/themeService";
+import { Icon } from "@iconify/react";
 import "../components/settings/SettingsModal.css";
 import "./SettingsScreen.css";
 
@@ -61,7 +64,7 @@ export default function SettingsScreen() {
     if (res?.data && Array.isArray(res.data)) {
       setPlayers?.(res.data);
       showNotification({
-        title: "🎃 Players Imported",
+        title: "Players Imported",
         body: `Successfully imported ${res.data.length} players!`,
       });
     } else if (res?.error) {
@@ -79,7 +82,7 @@ export default function SettingsScreen() {
       .then((data) => {
         setPlayers?.(data);
         showNotification({
-          title: "🔄 Players Reset",
+          title: "Players Reset",
           body: "Restored default players list.",
         });
       })
@@ -91,7 +94,7 @@ export default function SettingsScreen() {
     if (res?.data && typeof res.data === "object") {
       setGamesByCategory?.(res.data);
       showNotification({
-        title: "🎃 Games Imported",
+        title: "Games Imported",
         body: "Successfully imported games catalog!",
       });
     } else if (res?.error) {
@@ -109,7 +112,7 @@ export default function SettingsScreen() {
       .then((data) => {
         setGamesByCategory?.(data);
         showNotification({
-          title: "🔄 Games Catalog Reset",
+          title: "Games Catalog Reset",
           body: "Restored default games catalog.",
         });
       })
@@ -142,7 +145,7 @@ export default function SettingsScreen() {
   const handleLoadPreset = () => {
     if (!activePreset || !activePreset.settings) return;
     applySettings(activePreset.settings);
-    showPresetNotice(`✓ Applied "${activePreset.name}" preset!`);
+    showPresetNotice(`Applied "${activePreset.name}" preset!`);
   };
 
   const handleSaveCurrentAsPreset = (e) => {
@@ -183,6 +186,15 @@ export default function SettingsScreen() {
       lowsBaseThreshold: settings.lowsBaseThreshold ?? 0.15,
       midsBaseScale: settings.midsBaseScale ?? 0.25,
       highsBaseDrift: settings.highsBaseDrift ?? 0.15,
+      uiThemePreset: settings.uiThemePreset || "jack_o_flame",
+      uiSyncWithBackground: settings.uiSyncWithBackground !== false,
+      uiAccentColor: settings.uiAccentColor || "#ff6200",
+      uiAccentHover: settings.uiAccentHover || "#ff8533",
+      uiAccentGlow: settings.uiAccentGlow || "#ffaa44",
+      uiBgSurface: settings.uiBgSurface || "#110e19",
+      uiBorderColor: settings.uiBorderColor || "#ff6200",
+      uiTextColor: settings.uiTextColor || "#f8f8fc",
+      uiCursedColor: settings.uiCursedColor || "#ff1744",
     };
 
     const newPreset = addCustomPreset(name, currentBgSettings);
@@ -190,7 +202,7 @@ export default function SettingsScreen() {
     setCustomPresets(updatedCustom);
     setSelectedPresetId(newPreset.id);
     setNewPresetName("");
-    showPresetNotice(`✓ Saved custom preset "${name}"!`);
+    showPresetNotice(`Saved custom preset "${name}"!`);
   };
 
   const handleDeleteCustomPreset = () => {
@@ -199,20 +211,42 @@ export default function SettingsScreen() {
       const updated = deleteCustomPreset(activePreset.id);
       setCustomPresets(updated);
       setSelectedPresetId(BUILT_IN_PRESETS[0].id);
-      showPresetNotice(`🗑️ Deleted preset "${activePreset.name}".`);
+      showPresetNotice(`Deleted preset "${activePreset.name}".`);
     }
+  };
+
+  const handleBackgroundPaletteChange = (paletteKey) => {
+    if (settings.uiSyncWithBackground !== false) {
+      const theme = UI_THEMES[paletteKey];
+      if (theme) {
+        applySettings({
+          backgroundPalette: paletteKey,
+          uiThemePreset: paletteKey,
+          uiAccentColor: theme.accent,
+          uiAccentHover: theme.accentHover,
+          uiAccentGlow: theme.accentGlow,
+          uiBgSurface: theme.surface,
+          uiBorderColor: theme.border,
+          uiTextColor: theme.text,
+          uiCursedColor: theme.cursed,
+        });
+        return;
+      }
+    }
+    updateSetting("backgroundPalette", paletteKey);
   };
 
   return (
     <div className="settings-screen">
       {/* Header with Back Button */}
       <div className="settings-screen-header">
-        <button className="screen-back-btn" onClick={goBack} title="Return to Game (Esc)">
-          <span>←</span> Back to Game
+        <button className="screen-back-btn flex items-center gap-2" onClick={goBack} title="Return to Game (Esc)">
+          <Icon icon="game-icons:anticlockwise-rotation" className="text-base" />
+          <span>Back to Game</span>
         </button>
 
-        <div className="settings-title-wrap">
-          <span className="settings-title-icon">⚙️</span>
+        <div className="settings-title-wrap flex items-center gap-2">
+          <Icon icon="game-icons:gears" className="text-ui-accent text-2xl" />
           <h2 className="settings-title">SETTINGS & CONFIGURATION</h2>
         </div>
 
@@ -222,34 +256,39 @@ export default function SettingsScreen() {
       {/* Tab Navigation */}
       <div className="settings-tabs">
         <button
-          className={`settings-tab-btn ${activeTab === "theme" || activeTab === "background" ? "active" : ""}`}
-          onClick={() => setActiveTab("theme")}
+          className={`settings-tab-btn flex items-center gap-2 ${activeTab === "theme" || activeTab === "styles" || activeTab === "background" ? "active" : ""}`}
+          onClick={() => setActiveTab("styles")}
         >
-          <span>🎨</span> Theme & Personalization
+          <Icon icon="game-icons:paint-brush" className="text-lg text-ui-accent" />
+          <span>Styles & Theme</span>
         </button>
         <button
-          className={`settings-tab-btn ${activeTab === "data" ? "active" : ""}`}
+          className={`settings-tab-btn flex items-center gap-2 ${activeTab === "data" ? "active" : ""}`}
           onClick={() => setActiveTab("data")}
         >
-          <span>📁</span> Data & Content
+          <Icon icon="game-icons:save" className="text-lg text-ui-accent" />
+          <span>Data & Content</span>
         </button>
         <button
-          className={`settings-tab-btn ${activeTab === "game" ? "active" : ""}`}
+          className={`settings-tab-btn flex items-center gap-2 ${activeTab === "game" ? "active" : ""}`}
           onClick={() => setActiveTab("game")}
         >
-          <span>⚡</span> Curse & Game Rules
+          <Icon icon="game-icons:lightning-trio" className="text-lg text-ui-accent" />
+          <span>Curse & Rules</span>
         </button>
         <button
-          className={`settings-tab-btn ${activeTab === "audio" ? "active" : ""}`}
+          className={`settings-tab-btn flex items-center gap-2 ${activeTab === "audio" ? "active" : ""}`}
           onClick={() => setActiveTab("audio")}
         >
-          <span>🔊</span> Audio & FX
+          <Icon icon="game-icons:speaker" className="text-lg text-ui-accent" />
+          <span>Audio & FX</span>
         </button>
         <button
-          className={`settings-tab-btn ${activeTab === "desktop" ? "active" : ""}`}
+          className={`settings-tab-btn flex items-center gap-2 ${activeTab === "desktop" ? "active" : ""}`}
           onClick={() => setActiveTab("desktop")}
         >
-          <span>🖥️</span> Desktop & System
+          <Icon icon="game-icons:pc" className="text-lg text-ui-accent" />
+          <span>Desktop</span>
         </button>
       </div>
 
@@ -259,7 +298,7 @@ export default function SettingsScreen() {
           <>
             <SettingSection
               title="Player Roster"
-              icon="👥"
+              icon="game-icons:crowd"
               description="Manage the list of victims and challengers in the Darepot."
             >
               <SettingRow
@@ -270,19 +309,19 @@ export default function SettingsScreen() {
                 <div style={{ display: "flex", gap: "8px" }}>
                   <SettingButton
                     label="Import JSON"
-                    icon="📥"
+                    icon="game-icons:inbox"
                     variant="primary"
                     onClick={handleImportPlayers}
                   />
                   <SettingButton
                     label="Export"
-                    icon="📤"
+                    icon="game-icons:archive-register"
                     variant="secondary"
                     onClick={handleExportPlayers}
                   />
                   <SettingButton
                     label="Reset Defaults"
-                    icon="🔄"
+                    icon="game-icons:anticlockwise-rotation"
                     variant="secondary"
                     onClick={handleResetPlayers}
                   />
@@ -292,7 +331,7 @@ export default function SettingsScreen() {
 
             <SettingSection
               title="Games & Categories"
-              icon="🎮"
+              icon="game-icons:retro-controller"
               description="Manage the horrors and challenges in the game pool."
             >
               <SettingRow
@@ -303,19 +342,19 @@ export default function SettingsScreen() {
                 <div style={{ display: "flex", gap: "8px" }}>
                   <SettingButton
                     label="Import JSON"
-                    icon="📥"
+                    icon="game-icons:inbox"
                     variant="primary"
                     onClick={handleImportGames}
                   />
                   <SettingButton
                     label="Export"
-                    icon="📤"
+                    icon="game-icons:archive-register"
                     variant="secondary"
                     onClick={handleExportGames}
                   />
                   <SettingButton
                     label="Reset Defaults"
-                    icon="🔄"
+                    icon="game-icons:anticlockwise-rotation"
                     variant="secondary"
                     onClick={handleResetGames}
                   />
@@ -326,7 +365,7 @@ export default function SettingsScreen() {
             {isElectron && (
               <SettingSection
                 title="Local Application Data"
-                icon="📂"
+                icon="game-icons:open-folder"
                 description="Direct access to your desktop config and storage folder."
               >
                 <SettingRow
@@ -335,7 +374,7 @@ export default function SettingsScreen() {
                 >
                   <SettingButton
                     label="Open Data Folder"
-                    icon="📂"
+                    icon="game-icons:open-folder"
                     variant="secondary"
                     onClick={openUserDataFolder}
                   />
@@ -349,8 +388,8 @@ export default function SettingsScreen() {
           <>
             <SettingSection
               title="Spin Pace & Animation"
-              icon="⏱️"
-              description="Adjust reel pacing for your streaming or party environment."
+              icon="game-icons:stopwatch"
+              description="Adjust reel pacing and machine animations for your streaming or party environment."
             >
               <SettingRow
                 title="Fast Spin Mode"
@@ -362,11 +401,26 @@ export default function SettingsScreen() {
                   onChange={(val) => updateSetting("fastSpinMode", val)}
                 />
               </SettingRow>
+
+              <SettingRow
+                title="Machine Spin Expansion"
+                description="Scale factor applied to the slot cabinet during reel spin (100% = no expansion, 140% = massive focus)"
+                badge={`${Math.round((settings.spinExpansionScale ?? 1.13) * 100)}%`}
+              >
+                <SettingSlider
+                  value={Math.round((settings.spinExpansionScale ?? 1.13) * 100)}
+                  min={100}
+                  max={140}
+                  step={1}
+                  unit="%"
+                  onChange={(val) => updateSetting("spinExpansionScale", Number((val / 100).toFixed(2)))}
+                />
+              </SettingRow>
             </SettingSection>
 
             <SettingSection
               title="Curse Mechanics & Risk"
-              icon="💀"
+              icon="game-icons:skull-crossed-bones"
               description="Fine tune how fast the slot machine turns against you."
             >
               <SettingRow
@@ -411,7 +465,7 @@ export default function SettingsScreen() {
 
             <SettingSection
               title="Reset Counters"
-              icon="⚠️"
+              icon="game-icons:hazard-sign"
               description="Clear session counters if starting a new game night."
             >
               <SettingRow
@@ -420,7 +474,7 @@ export default function SettingsScreen() {
               >
                 <SettingButton
                   label="Reset Curse"
-                  icon="💀"
+                  icon="game-icons:skull-crossed-bones"
                   variant="danger"
                   onClick={resetCurse}
                 />
@@ -432,7 +486,7 @@ export default function SettingsScreen() {
               >
                 <SettingButton
                   label="Reset Spins"
-                  icon="🌀"
+                  icon="game-icons:vortex"
                   variant="danger"
                   onClick={resetSpins}
                 />
@@ -445,7 +499,7 @@ export default function SettingsScreen() {
           <>
             <SettingSection
               title="Master Audio"
-              icon="🔊"
+              icon="game-icons:speaker"
               description="Control sound effects and haunted ambient audio."
             >
               <SettingRow
@@ -479,7 +533,7 @@ export default function SettingsScreen() {
               >
                 <SettingButton
                   label="Play Test Sound"
-                  icon="🔊"
+                  icon="game-icons:speaker"
                   variant="secondary"
                   disabled={!settings.masterSound}
                   onClick={handleTestSound}
@@ -489,7 +543,7 @@ export default function SettingsScreen() {
 
             <SettingSection
               title="System Audio"
-              icon="🔔"
+              icon="game-icons:bell-shield"
               description="Desktop native alerts and haptics."
             >
               <SettingRow
@@ -505,12 +559,191 @@ export default function SettingsScreen() {
           </>
         )}
 
-        {(activeTab === "theme" || activeTab === "background") && (
+        {(activeTab === "theme" || activeTab === "styles" || activeTab === "background") && (
           <>
+            {/* UI Color & Styles Customization Section */}
+            <SettingSection
+              title="App UI Styles & Colors"
+              icon="game-icons:paint-brush"
+              description="Customize application colors, borders, and panel themes to fit the 8-bit retro aesthetic."
+            >
+              <SettingRow
+                title="Sync with Background Palette"
+                description="Automatically update UI colors when the 8-bit background shader palette changes"
+              >
+                <SettingToggle
+                  checked={settings.uiSyncWithBackground !== false}
+                  onChange={(checked) => {
+                    if (checked) {
+                      const theme = UI_THEMES[settings.backgroundPalette] || UI_THEMES.jack_o_flame;
+                      applySettings({
+                        uiSyncWithBackground: true,
+                        uiThemePreset: settings.backgroundPalette || "jack_o_flame",
+                        uiAccentColor: theme.accent,
+                        uiAccentHover: theme.accentHover,
+                        uiAccentGlow: theme.accentGlow,
+                        uiBgSurface: theme.surface,
+                        uiBorderColor: theme.border,
+                        uiTextColor: theme.text,
+                        uiCursedColor: theme.cursed,
+                      });
+                    } else {
+                      updateSetting("uiSyncWithBackground", false);
+                    }
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow
+                title="Retro UI Theme Presets"
+                description="Select a curated 8-bit palette to re-color the cabinet, buttons, borders and badges"
+                badge={settings.uiThemePreset ? settings.uiThemePreset.toUpperCase() : "CUSTOM"}
+              >
+                <div className="ui-theme-presets-grid">
+                  {Object.values(UI_THEMES).map((th) => (
+                    <button
+                      key={th.id}
+                      type="button"
+                      className={`ui-theme-preset-btn ${settings.uiThemePreset === th.id ? "active" : ""}`}
+                      onClick={() => {
+                        applySettings({
+                          uiThemePreset: th.id,
+                          uiAccentColor: th.accent,
+                          uiAccentHover: th.accentHover,
+                          uiAccentGlow: th.accentGlow,
+                          uiBgSurface: th.surface,
+                          uiBorderColor: th.border,
+                          uiTextColor: th.text,
+                          uiCursedColor: th.cursed,
+                        });
+                      }}
+                    >
+                      <span className="ui-theme-preset-btn-name flex items-center gap-1.5">
+                        <Icon icon={th.icon || "game-icons:paint-brush"} className="text-ui-accent text-base" />
+                        <span>{th.name}</span>
+                      </span>
+                      <div className="ui-theme-preset-swatches">
+                        <div className="ui-theme-preset-swatch" style={{ background: th.surface }} />
+                        <div className="ui-theme-preset-swatch" style={{ background: th.border }} />
+                        <div className="ui-theme-preset-swatch" style={{ background: th.accent }} />
+                        <div className="ui-theme-preset-swatch" style={{ background: th.accentGlow }} />
+                        <div className="ui-theme-preset-swatch" style={{ background: th.cursed }} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </SettingRow>
+
+              <SettingRow
+                title="Primary Accent Color"
+                description="Arcade buttons, active tabs, highlights, and primary retro indicators"
+              >
+                <SettingColorPicker
+                  value={settings.uiAccentColor || "#ff6200"}
+                  onChange={(val) => {
+                    applySettings({
+                      uiAccentColor: val,
+                      uiThemePreset: "custom",
+                      uiSyncWithBackground: false,
+                    });
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow
+                title="Panel & Cabinet Border Color"
+                description="Pixel borders around slot reels, machines, docks, and modal dialogs"
+              >
+                <SettingColorPicker
+                  value={settings.uiBorderColor || "#ff6200"}
+                  onChange={(val) => {
+                    applySettings({
+                      uiBorderColor: val,
+                      uiThemePreset: "custom",
+                      uiSyncWithBackground: false,
+                    });
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow
+                title="Cabinet Surface Background"
+                description="Main background color of retro arcade cabinets and panels"
+              >
+                <SettingColorPicker
+                  value={settings.uiBgSurface || "#110e19"}
+                  onChange={(val) => {
+                    applySettings({
+                      uiBgSurface: val,
+                      uiThemePreset: "custom",
+                      uiSyncWithBackground: false,
+                    });
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow
+                title="Text / Font Color"
+                description="High-contrast body text and HUD labels"
+              >
+                <SettingColorPicker
+                  value={settings.uiTextColor || "#f8f8fc"}
+                  onChange={(val) => {
+                    applySettings({
+                      uiTextColor: val,
+                      uiThemePreset: "custom",
+                      uiSyncWithBackground: false,
+                    });
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow
+                title="Cursed / Danger Color"
+                description="Cursed reel alerts, hazard meter bars, and demonic events"
+              >
+                <SettingColorPicker
+                  value={settings.uiCursedColor || "#ff1744"}
+                  onChange={(val) => {
+                    applySettings({
+                      uiCursedColor: val,
+                      uiThemePreset: "custom",
+                      uiSyncWithBackground: false,
+                    });
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow
+                title="Reset UI Colors"
+                description="Restore original Jack-o-Flame retro arcade color scheme"
+              >
+                <SettingButton
+                  label="Reset Colors"
+                  icon="game-icons:anticlockwise-rotation"
+                  variant="secondary"
+                  onClick={() => {
+                    const def = UI_THEMES.jack_o_flame;
+                    applySettings({
+                      uiThemePreset: "jack_o_flame",
+                      uiSyncWithBackground: true,
+                      uiAccentColor: def.accent,
+                      uiAccentHover: def.accentHover,
+                      uiAccentGlow: def.accentGlow,
+                      uiBgSurface: def.surface,
+                      uiBorderColor: def.border,
+                      uiTextColor: def.text,
+                      uiCursedColor: def.cursed,
+                    });
+                  }}
+                />
+              </SettingRow>
+            </SettingSection>
+
             {/* Setting Presets Section */}
             <SettingSection
               title="Theme & Personalization Presets"
-              icon="🎛️"
+              icon="game-icons:sliders"
               description="Instantly switch between visual themes, custom logos, and audio reactivity profiles, or save your own."
             >
               <div className="preset-hero-box">
@@ -530,20 +763,20 @@ export default function SettingsScreen() {
                       value={selectedPresetId}
                       options={allPresets.map((p) => ({
                         value: p.id,
-                        label: (p.isCustom ? "⭐ " : "") + p.name,
+                        label: (p.isCustom ? "Custom: " : "") + p.name,
                       }))}
                       onChange={(val) => setSelectedPresetId(val)}
                     />
                     <SettingButton
                       label="Load Preset"
-                      icon="⚡"
+                      icon="game-icons:lightning-arc"
                       variant="primary"
                       onClick={handleLoadPreset}
                     />
                     {activePreset?.isCustom && (
                       <SettingButton
                         label="Delete"
-                        icon="🗑️"
+                        icon="game-icons:trash-can"
                         variant="danger"
                         onClick={handleDeleteCustomPreset}
                       />
@@ -557,17 +790,21 @@ export default function SettingsScreen() {
                     <span className="preset-info-desc">{activePreset?.description}</span>
                   </div>
                   <div className="preset-chips-wrap">
-                    <span className="preset-chip">
-                      🎨 {activePreset?.settings?.backgroundPalette || "jack_o_flame"}
+                    <span className="preset-chip flex items-center gap-1">
+                      <Icon icon="game-icons:palette" className="text-ui-accent" />
+                      <span>{activePreset?.settings?.backgroundPalette || "jack_o_flame"}</span>
                     </span>
-                    <span className="preset-chip">
-                      🌀 {activePreset?.settings?.backgroundPattern || "plasma"}
+                    <span className="preset-chip flex items-center gap-1">
+                      <Icon icon="game-icons:vortex" className="text-ui-accent" />
+                      <span>{activePreset?.settings?.backgroundPattern || "plasma"}</span>
                     </span>
-                    <span className="preset-chip">
-                      🎭 {activePreset?.settings?.logoTexture || "dandare"}
+                    <span className="preset-chip flex items-center gap-1">
+                      <Icon icon="game-icons:theater-curtains" className="text-ui-accent" />
+                      <span>{activePreset?.settings?.logoTexture || "dandare"}</span>
                     </span>
-                    <span className="preset-chip">
-                      ⚡ {activePreset?.settings?.fftSmoothing === 0 ? "0-Delay" : `${Math.round((activePreset?.settings?.fftSmoothing ?? 0.35) * 100)}% FFT`}
+                    <span className="preset-chip flex items-center gap-1">
+                      <Icon icon="game-icons:lightning-arc" className="text-ui-accent" />
+                      <span>{activePreset?.settings?.fftSmoothing === 0 ? "0-Delay" : `${Math.round((activePreset?.settings?.fftSmoothing ?? 0.35) * 100)}% FFT`}</span>
                     </span>
                   </div>
                 </div>
@@ -586,7 +823,7 @@ export default function SettingsScreen() {
                     />
                     <SettingButton
                       label="Save Preset"
-                      icon="💾"
+                      icon="game-icons:floppy-disk"
                       variant="secondary"
                       onClick={handleSaveCurrentAsPreset}
                     />
@@ -598,7 +835,7 @@ export default function SettingsScreen() {
             {/* Background Shader & Palette */}
             <SettingSection
               title="Sound Reactive Shader Background"
-              icon="🌊"
+              icon="game-icons:wave-crest"
               description="Real-time WebGL Bayer-dithered procedural background with audio frequency reaction."
             >
               <SettingRow
@@ -620,17 +857,17 @@ export default function SettingsScreen() {
                   <SettingSelect
                     value={settings.backgroundPalette || "jack_o_flame"}
                     options={[
-                      { value: "jack_o_flame", label: "🎃 Jack-o-Flame (Pumpkin Fire)" },
-                      { value: "lospec_retro", label: "💾 Lospec Retro (Cyberpunk Hot Pink)" },
-                      { value: "cursed_blood", label: "💀 Demonic Crimson (Cursed)" },
-                      { value: "toxic_acid", label: "🧪 Acid Hazard (Toxic Slime)" },
-                      { value: "gameboy_dmg", label: "🕹️ GameBoy Classic (1989 DMG)" },
-                      { value: "midnight_synth", label: "🌌 Midnight Synthwave (Outrun)" },
-                      { value: "gothic_crypt", label: "🦇 Castlevania Crypt (Haunted Fog)" },
-                      { value: "noir_monochrome", label: "📺 1-Bit Noir (Obra Dinn)" },
+                      { value: "jack_o_flame", label: "Jack-o-Flame (Pumpkin Fire)" },
+                      { value: "lospec_retro", label: "Lospec Retro (Cyberpunk Hot Pink)" },
+                      { value: "cursed_blood", label: "Demonic Crimson (Cursed)" },
+                      { value: "toxic_acid", label: "Acid Hazard (Toxic Slime)" },
+                      { value: "gameboy_dmg", label: "GameBoy Classic (1989 DMG)" },
+                      { value: "midnight_synth", label: "Midnight Synthwave (Outrun)" },
+                      { value: "gothic_crypt", label: "Castlevania Crypt (Haunted Fog)" },
+                      { value: "noir_monochrome", label: "1-Bit Noir (Obra Dinn)" },
                     ]}
                     disabled={settings.reactiveBackground === false}
-                    onChange={(val) => updateSetting("backgroundPalette", val)}
+                    onChange={handleBackgroundPaletteChange}
                   />
                   {/* Visual 4-Color Palette Swatch Display */}
                   <div className="palette-swatches-row">
@@ -663,11 +900,11 @@ export default function SettingsScreen() {
                 <SettingSelect
                   value={settings.backgroundPattern || "plasma"}
                   options={[
-                    { value: "balatro", label: "🃏 Balatro Hypnotic Card Swirl" },
-                    { value: "plasma", label: "🌀 Warped Plasma & Organic Waves" },
-                    { value: "vortex", label: "🌪️ Hypnotic Vortex Chasm" },
-                    { value: "waves", label: "〰️ Soundwave Oscilloscope Ribbons" },
-                    { value: "grid", label: "🌐 Retro Perspective Cyber Grid" },
+                    { value: "balatro", label: "Balatro Hypnotic Card Swirl" },
+                    { value: "plasma", label: "Warped Plasma & Organic Waves" },
+                    { value: "vortex", label: "Hypnotic Vortex Chasm" },
+                    { value: "waves", label: "Soundwave Oscilloscope Ribbons" },
+                    { value: "grid", label: "Retro Perspective Cyber Grid" },
                   ]}
                   disabled={settings.reactiveBackground === false}
                   onChange={(val) => updateSetting("backgroundPattern", val)}
@@ -754,7 +991,7 @@ export default function SettingsScreen() {
             {/* 3-Band Audio Reactivity & Tiled Logo Layers */}
             <SettingSection
               title="Tiled Logo Layer, Opacity & Head Shake"
-              icon="🎭"
+              icon="game-icons:theater-curtains"
               description="Customize the tiled logo sprite, low-frequency opacity surges, and side-to-side head shaking."
             >
               <SettingRow
@@ -795,9 +1032,9 @@ export default function SettingsScreen() {
                       <div style={{ display: "flex", gap: "8px", flex: 1, alignItems: "center" }}>
                         <label
                           className="screen-back-btn"
-                          style={{ cursor: "pointer", fontSize: "0.75rem", padding: "6px 12px" }}
+                          style={{ cursor: "pointer", fontSize: "0.75rem", padding: "6px 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
                         >
-                          📁 Choose File
+                          <Icon icon="game-icons:open-folder" className="text-ui-accent text-sm" /> Choose File
                           <input
                             type="file"
                             accept="image/*"
@@ -980,13 +1217,13 @@ export default function SettingsScreen() {
             {/* Latency & Ultra-Responsiveness Calibration */}
             <SettingSection
               title="Latency & Smoothing Calibration"
-              icon="⚡"
+              icon="game-icons:lightning-arc"
               description="Fine-tune time constants and base offsets for zero-delay instant reactivity."
             >
               <SettingRow
                 title="Web Audio Hardware Smoothing"
                 description="Internal FFT time smoothing constant (0.00 = pure 0-delay instant data)"
-                badge={settings.fftSmoothing === 0 ? "⚡ 0-Delay" : `${Math.round((settings.fftSmoothing ?? 0.35) * 100)}%`}
+                badge={settings.fftSmoothing === 0 ? "0-Delay" : `${Math.round((settings.fftSmoothing ?? 0.35) * 100)}%`}
               >
                 <SettingSlider
                   value={Math.round((settings.fftSmoothing ?? 0.35) * 100)}
@@ -1111,7 +1348,7 @@ export default function SettingsScreen() {
           <>
             <SettingSection
               title="Desktop Features"
-              icon="🖥️"
+              icon="game-icons:pc"
               description="System level integrations for the standalone app."
             >
               <SettingRow
@@ -1131,7 +1368,7 @@ export default function SettingsScreen() {
               >
                 <SettingButton
                   label="Toggle Fullscreen"
-                  icon="🖥️"
+                  icon="game-icons:pc"
                   variant="secondary"
                   onClick={toggleFullscreen}
                 />
@@ -1140,7 +1377,7 @@ export default function SettingsScreen() {
 
             <SettingSection
               title="Atmospheric Visuals"
-              icon="🎃"
+              icon="game-icons:jack-o-lantern"
               description="Customize ambient effects and vignettes."
             >
               <SettingRow
@@ -1161,7 +1398,7 @@ export default function SettingsScreen() {
 
             <SettingSection
               title="System Info"
-              icon="ℹ️"
+              icon="game-icons:info"
               description="Runtime specifications."
             >
               <SettingRow
@@ -1182,13 +1419,13 @@ export default function SettingsScreen() {
       <div className="settings-footer">
         <SettingButton
           label="Reset All Settings"
-          icon="🔄"
+          icon="game-icons:anticlockwise-rotation"
           variant="danger"
           onClick={resetSettings}
         />
         <SettingButton
           label="Done"
-          icon="✓"
+          icon="game-icons:check-mark"
           variant="primary"
           onClick={goBack}
         />

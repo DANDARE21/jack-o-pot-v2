@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import SlotReel from "./SlotReel";
 import { motion } from "framer-motion";
 import { Howl } from "howler";
+import { Icon } from "@iconify/react";
 import "./SlotMachine.css";
 
 const SlotMachine = forwardRef(
@@ -136,7 +137,7 @@ const SlotMachine = forwardRef(
     };
 
     return (
-      <div className="slot-machine-cabinet">
+      <div className={`slot-machine-cabinet ${cursed ? "cursed" : ""} ${spinning ? "is-spinning" : ""}`}>
         {/* Arcade Marquee Header */}
         <div className="marquee-bar">
           <div className="marquee-indicator" />
@@ -173,7 +174,7 @@ const SlotMachine = forwardRef(
             pitch={1.1}
           />
 
-          {/* 🎮 Game reel: show images while spinning */}
+          {/* Game reel: show images while spinning */}
           <SlotReel
             label="GAME"
             items={allGames.map((g) => ({
@@ -192,7 +193,9 @@ const SlotMachine = forwardRef(
         {/* Curse Bar / Gauge */}
         <div className="curse-gauge-container">
           <div className="curse-gauge-header">
-            <span className="curse-gauge-title">💀 CURSE METER</span>
+            <span className="curse-gauge-title flex items-center">
+              <Icon icon="game-icons:skull-crossed-bones" className="text-ui-cursed inline-block mr-1 text-base" /> CURSE METER
+            </span>
             <span className="curse-gauge-value">{curseMeter}%</span>
           </div>
           <div className="curse-track">

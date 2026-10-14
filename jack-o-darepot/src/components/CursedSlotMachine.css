@@ -1,9 +1,8 @@
 .cursed-slot-background {
-  background: radial-gradient(circle, #1a0000 0%, #000 80%);
-  border: 3px solid red;
-  box-shadow: 0 0 40px red;
+  background: var(--ui-bg-surface);
+  border: 3px solid var(--ui-cursed);
+  box-shadow: 6px 6px 0px #000000, 0 0 25px var(--ui-cursed-alpha-40);
   padding: 20px;
-  border-radius: 20px;
 }
 
 .slot-machine-container.cursed {
@@ -17,8 +16,8 @@
 }
 
 .slot-textbox.cursed-text {
-  color: #ff5555;
-  text-shadow: 0 0 15px red;
-  font-family: "Creepster", cursive;
+  color: var(--ui-cursed);
+  text-shadow: 2px 2px 0px #000000;
+  font-family: var(--font-cursed, "Creepster", cursive);
   letter-spacing: 2px;
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Icon } from "@iconify/react";
 import { useElectron } from "../hooks/useElectron";
 import "./DesktopBar.css";
 
@@ -36,7 +37,7 @@ export default function DesktopBar({ isFullscreen = false }) {
     <div className="desktop-topbar">
       <div className="desktop-topbar-left">
         <div className="desktop-brand">
-          <span className="desktop-brand-icon">🎃</span>
+          <Icon icon="game-icons:pumpkin-lantern" className="text-ui-accent text-lg" />
           <span className="desktop-brand-name">JACK'O POT</span>
         </div>
         <span className="desktop-version-badge">Desktop Edition</span>

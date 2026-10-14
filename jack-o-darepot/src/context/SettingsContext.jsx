@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Howler } from "howler";
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "./settingsDefaults";
 import { SettingsContext } from "./SettingsContextInstance";
+import { applyThemeToDom } from "../services/themeService";
 export { useSettings } from "./useSettings";
 
 export function SettingsProvider({ children }) {
@@ -16,6 +17,26 @@ export function SettingsProvider({ children }) {
     }
     return DEFAULT_SETTINGS;
   });
+
+  // Apply UI theme CSS variables to DOM
+  useEffect(() => {
+    try {
+      applyThemeToDom(settings);
+    } catch (e) {
+      console.error("Failed to apply theme to DOM:", e);
+    }
+  }, [
+    settings.uiThemePreset,
+    settings.uiSyncWithBackground,
+    settings.uiAccentColor,
+    settings.uiAccentHover,
+    settings.uiAccentGlow,
+    settings.uiBgSurface,
+    settings.uiBorderColor,
+    settings.uiTextColor,
+    settings.uiCursedColor,
+    settings.backgroundPalette,
+  ]);
 
   // Apply settings to Howler audio engine
   useEffect(() => {

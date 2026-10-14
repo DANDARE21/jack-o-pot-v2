@@ -273,7 +273,7 @@ void main() {
 
 export const COLOR_PALETTES = {
   jack_o_flame: {
-    name: "🎃 Jack-o-Flame (Pumpkin Fire)",
+    name: "Jack-o-Flame (Pumpkin Fire)",
     colors: [
       [0.047, 0.027, 0.078], // #0c0714 Obsidian Navy
       [0.400, 0.094, 0.012], // #661803 Burning Ember
@@ -282,7 +282,7 @@ export const COLOR_PALETTES = {
     ],
   },
   lospec_retro: {
-    name: "💾 Lospec Retro (Cyberpunk Hot Pink)",
+    name: "Lospec Retro (Cyberpunk Hot Pink)",
     colors: [
       [0.047, 0.063, 0.200], // #0c1033 Dark Navy
       [0.039, 0.227, 0.165], // #0a3a2a Deep Forest Green
@@ -291,7 +291,7 @@ export const COLOR_PALETTES = {
     ],
   },
   cursed_blood: {
-    name: "💀 Demonic Crimson (Cursed)",
+    name: "Demonic Crimson (Cursed)",
     colors: [
       [0.039, 0.004, 0.020], // #0a0105 Abyssal Void
       [0.302, 0.020, 0.098], // #4d0519 Dried Blood
@@ -300,7 +300,7 @@ export const COLOR_PALETTES = {
     ],
   },
   toxic_acid: {
-    name: "🧪 Acid Hazard (Toxic Slime)",
+    name: "Acid Hazard (Toxic Slime)",
     colors: [
       [0.012, 0.051, 0.027], // #030d07 Toxic Void
       [0.059, 0.239, 0.118], // #0f3d1e Slime Shadow
@@ -309,7 +309,7 @@ export const COLOR_PALETTES = {
     ],
   },
   gameboy_dmg: {
-    name: "🕹️ GameBoy Classic (1989 DMG)",
+    name: "GameBoy Classic (1989 DMG)",
     colors: [
       [0.059, 0.220, 0.059], // #0f380f Darkest Moss
       [0.188, 0.384, 0.188], // #306230 Dark Olive
@@ -318,7 +318,7 @@ export const COLOR_PALETTES = {
     ],
   },
   midnight_synth: {
-    name: "🌌 Midnight Synthwave (Outrun)",
+    name: "Midnight Synthwave (Outrun)",
     colors: [
       [0.059, 0.020, 0.114], // #0f051d Midnight Void
       [0.357, 0.078, 0.502], // #5b1480 Neon Violet
@@ -327,7 +327,7 @@ export const COLOR_PALETTES = {
     ],
   },
   gothic_crypt: {
-    name: "🦇 Castlevania Crypt (Haunted Fog)",
+    name: "Castlevania Crypt (Haunted Fog)",
     colors: [
       [0.031, 0.027, 0.051], // #08070d Tomb Black
       [0.169, 0.141, 0.220], // #2b2438 Crypt Slate
@@ -336,7 +336,7 @@ export const COLOR_PALETTES = {
     ],
   },
   noir_monochrome: {
-    name: "📺 1-Bit Noir (Macintosh / Obra Dinn)",
+    name: "1-Bit Noir (Macintosh / Obra Dinn)",
     colors: [
       [0.020, 0.020, 0.020], // #050505 Ink Black
       [0.220, 0.220, 0.220], // #383838 Charcoal
@@ -355,11 +355,11 @@ export const PATTERN_MAP = {
 };
 
 export const LOGO_TEXTURE_OPTIONS = [
-  { value: "dandare", label: "👑 Dandare (Default)", url: "/assets/images/dandare.png" },
-  { value: "pumpkin", label: "🎃 Pixel Pumpkin", url: "/assets/images/pumpkin.png" },
-  { value: "skull", label: "💀 Demonic Skull", url: "/assets/images/skull.png" },
-  { value: "six", label: "🎲 Six Logo", url: "/assets/images/six.png" },
-  { value: "custom", label: "🖼️ Custom Texture / Upload", url: "" },
+  { value: "dandare", label: "Dandare (Default)", url: "/assets/images/dandare.png", icon: "game-icons:crown" },
+  { value: "pumpkin", label: "Pixel Pumpkin", url: "/assets/images/pumpkin.png", icon: "game-icons:jack-o-lantern" },
+  { value: "skull", label: "Demonic Skull", url: "/assets/images/skull.png", icon: "game-icons:skull-crossed-bones" },
+  { value: "six", label: "Six Logo", url: "/assets/images/six.png", icon: "game-icons:rolling-dices" },
+  { value: "custom", label: "Custom Texture / Upload", url: "", icon: "game-icons:photo-camera" },
 ];
 
 export function getLogoTextureUrl(textureKey, customUrl = "") {

@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import GameScreen from "../screens/GameScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import CollectionScreen from "../screens/CollectionScreen";
+import LeaderboardScreen from "../screens/LeaderboardScreen";
 
 // Screen Registry
 const SCREEN_COMPONENTS = {
   [SCREENS.GAME]: GameScreen,
   [SCREENS.COLLECTION]: CollectionScreen,
+  [SCREENS.LEADERBOARD]: LeaderboardScreen,
   [SCREENS.SETTINGS]: SettingsScreen,
 };
 

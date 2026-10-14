@@ -7,6 +7,7 @@ import SpinResultPopup from "./SpinResultPopup";
 import { useElectron } from "../hooks/useElectron";
 import { useSettings } from "../context/SettingsContext";
 import { useGame } from "../context/GameContext";
+import { Icon } from "@iconify/react";
 import "./SlotMachineHandler.css";
 
 export default function SlotMachineHandler({
@@ -25,9 +26,10 @@ export default function SlotMachineHandler({
     resetCurse,
     spinCount,
     setSpinCount,
+    isSpinning: spinning,
+    setIsSpinning: setSpinning,
   } = game;
 
-  const [spinning, setSpinning] = useState(false);
   const [cursedTrigger, setCursedTrigger] = useState(false);
   const [isCursedMode, setIsCursedMode] = useState(false);
 
@@ -144,16 +146,26 @@ export default function SlotMachineHandler({
 
         if (settings.desktopNotifications) {
           showNotification({
-            title: "💀 CURSED DARE DECIDED!",
+            title: "CURSED DARE DECIDED!",
             body: `${playerName}: ${challengeName}`,
           });
         }
+
+        // Record player spin on leaderboard
+        game.recordPlayerSpin?.(playerName);
 
         setPopupData({
           type: "cursed",
           player: playerName,
           challengeName,
           challengeText,
+          onResolveDare: (won) => {
+            game.recordChallengeOutcome?.(playerName, {
+              won,
+              points: won ? 100 : 0,
+              dareName: challengeName,
+            });
+          },
           onClose: () => {
             console.log("[Handler] popup closed (cursed) -> switching back to normal");
             setPopupData(null);
@@ -212,7 +224,7 @@ export default function SlotMachineHandler({
           if (settings.systemBeepOnCurse) beep();
           if (settings.desktopNotifications) {
             showNotification({
-              title: "💀 CURSED REEL TRIGGERED!",
+              title: "CURSED REEL TRIGGERED!",
               body: "The machine whispers back... cursed mode activated!",
             });
           }
@@ -234,7 +246,7 @@ export default function SlotMachineHandler({
 
         if (settings.desktopNotifications) {
           showNotification({
-            title: "🎃 JACK'O DAREPOT",
+            title: "JACK'O DAREPOT",
             body: `${playerName} got ${gameName} (${categoryName})!`,
           });
         }
@@ -242,6 +254,7 @@ export default function SlotMachineHandler({
         // Update curse and spin count BEFORE popup
         increaseCurse();
         setSpinCount((prev) => prev + 1);
+        game.recordPlayerSpin?.(playerName);
 
         const gameObj = typeof result?.game === "object" ? result.game : null;
 
@@ -252,6 +265,13 @@ export default function SlotMachineHandler({
           game: gameName,
           executablePath: gameObj?.executablePath,
           launchArgs: gameObj?.launchArgs,
+          onResolveDare: (won) => {
+            game.recordChallengeOutcome?.(playerName, {
+              won,
+              points: won ? 50 : 0,
+              dareName: `${gameName} (${categoryName})`,
+            });
+          },
           onClose: () => {
             console.log("[Handler] popup closed (normal)");
             setPopupData(null);
@@ -270,9 +290,16 @@ export default function SlotMachineHandler({
 
       {/* Slot machine */}
       <motion.div
-        className="handler-machine-wrapper"
-        animate={spinning ? { x: [-3, 3, -3, 3, 0] } : { x: 0 }}
-        transition={{ duration: 0.2, repeat: spinning ? Infinity : 0 }}
+        className={`handler-machine-wrapper ${spinning ? "is-machine-spinning" : ""}`}
+        animate={
+          spinning
+            ? { scale: settings.spinExpansionScale ?? 1.13, x: [-2, 2, -2, 2, 0] }
+            : { scale: 1, x: 0 }
+        }
+        transition={{
+          scale: { duration: 0.5, ease: [0.25, 1, 0.5, 1] },
+          x: { duration: 0.18, repeat: spinning ? Infinity : 0, ease: "linear" },
+        }}
       >
         {!isCursedMode ? (
           <SlotMachine
@@ -305,21 +332,28 @@ export default function SlotMachineHandler({
 
       {/* Arcade Dashboard & HUD */}
       <div className="handler-controls-area">
-        <div className="arcade-hud-bar">
+        <div className={`arcade-hud-panel ${spinning ? "is-hidden-spinning" : ""}`}>
           <div className="hud-stat-item">
             <span className="hud-stat-label">TOTAL SPINS</span>
-            <span className="hud-stat-value">🌀 {spinCount}</span>
+            <span className="hud-stat-value flex items-center gap-1.5">
+              <Icon icon="game-icons:anticlockwise-rotation" className="text-ui-accent text-base" />
+              <span>{spinCount}</span>
+            </span>
           </div>
           <div className="hud-divider" />
           <div className="hud-stat-item">
             <span className="hud-stat-label">LOADED PLAYERS</span>
-            <span className="hud-stat-value">👥 {players.length}</span>
+            <span className="hud-stat-value flex items-center gap-1.5">
+              <Icon icon="game-icons:crowd" className="text-ui-accent text-base" />
+              <span>{players.length}</span>
+            </span>
           </div>
           <div className="hud-divider" />
           <div className="hud-stat-item">
             <span className="hud-stat-label">MACHINE STATUS</span>
-            <span className={`hud-stat-value ${spinning ? "status-spinning" : isCursedMode ? "status-cursed" : "status-ready"}`}>
-              {spinning ? "SPINNING..." : isCursedMode ? "CURSED" : "READY"}
+            <span className={`hud-status-badge ${spinning ? "status-spinning" : isCursedMode ? "status-cursed" : "status-ready"}`}>
+              <span className="status-indicator-dot" />
+              <span>{spinning ? "SPINNING" : isCursedMode ? "CURSED" : "READY"}</span>
             </span>
           </div>
         </div>
@@ -332,8 +366,14 @@ export default function SlotMachineHandler({
           whileHover={!spinning && players.length ? { scale: 1.04 } : {}}
           whileTap={!spinning && players.length ? { scale: 0.96 } : {}}
         >
-          <span className="spin-btn-icon">
-            {spinning ? "🌀" : isCursedMode ? "👿" : "🎰"}
+          <span className="spin-btn-icon flex items-center justify-center">
+            {spinning ? (
+              <Icon icon="game-icons:anticlockwise-rotation" className="animate-spin text-2xl" />
+            ) : isCursedMode ? (
+              <Icon icon="game-icons:skull-crossed-bones" className="text-2xl" />
+            ) : (
+              <Icon icon="game-icons:rolling-dices" className="text-2xl" />
+            )}
           </span>
           <span className="spin-btn-text">
             {!players.length

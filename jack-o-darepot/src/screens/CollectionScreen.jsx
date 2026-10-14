@@ -3,6 +3,7 @@ import { useGame } from "../context/GameContext";
 import { useNavigation } from "../navigation/NavigationContext";
 import { useElectron } from "../hooks/useElectron";
 import { Howl } from "howler";
+import { Icon } from "@iconify/react";
 import "./CollectionScreen.css";
 
 export default function CollectionScreen() {
@@ -148,7 +149,7 @@ export default function CollectionScreen() {
       }
 
       showNotification?.({
-        title: `🚀 Launching ${game.name}`,
+        title: `Launching ${game.name}`,
         body: `Starting executable from ${game.executablePath}...`,
       });
 
@@ -160,7 +161,7 @@ export default function CollectionScreen() {
       if (res?.success) {
         showNotice(
           "success",
-          `🎮 "${game.name}" launched successfully! ${res.pid ? `(PID: ${res.pid})` : ""}`
+          `"${game.name}" launched successfully! ${res.pid ? `(PID: ${res.pid})` : ""}`
         );
       } else {
         beep?.();
@@ -365,12 +366,12 @@ export default function CollectionScreen() {
       <header className="collection-header">
         <div className="collection-header-left">
           <button className="coll-btn coll-btn-secondary coll-btn-sm" onClick={goBack} title="Return to Game (Esc)">
-            <span>←</span> Back to Game
+            <Icon icon="game-icons:anticlockwise-rotation" className="text-ui-accent inline-block text-base mr-1" /> Back to Game
           </button>
 
           <div className="collection-title-wrap">
             <div className="collection-title-main">
-              <span className="collection-title-icon">🎮</span>
+              <Icon icon="game-icons:retro-controller" className="collection-title-icon text-ui-accent text-3xl" />
               <h1 className="collection-title">GAME COLLECTION & LAUNCHER</h1>
             </div>
             <p className="collection-subtitle">
@@ -383,13 +384,13 @@ export default function CollectionScreen() {
         <div className="collection-header-actions">
           <div className="collection-header-stats">
             <div className="stat-pill" title="Total game categories">
-              📁 {categoriesList.length} Categories
+              <Icon icon="game-icons:open-folder" className="text-ui-accent inline-block mr-1 text-base" /> {categoriesList.length} Categories
             </div>
             <div className="stat-pill" title="Total game titles">
-              🕹️ {totalGamesCount} Games
+              <Icon icon="game-icons:game-console" className="text-ui-accent inline-block mr-1 text-base" /> {totalGamesCount} Games
             </div>
             <div className="stat-pill highlight" title="Games with linked executable files ready to launch">
-              🚀 {linkedGamesCount} Ready to Launch
+              <Icon icon="game-icons:rocket" className="text-ui-accent inline-block mr-1 text-base" /> {linkedGamesCount} Ready to Launch
             </div>
           </div>
 
@@ -398,7 +399,7 @@ export default function CollectionScreen() {
             onClick={() => setIsNewCatModalOpen(true)}
             title="Create a new category"
           >
-            <span>📁</span> + New Category
+            <Icon icon="game-icons:open-folder" className="text-ui-accent inline-block mr-1" /> + New Category
           </button>
 
           <button
@@ -406,7 +407,7 @@ export default function CollectionScreen() {
             onClick={() => openAddGameModal()}
             title="Add a new game"
           >
-            <span>+</span> Add Game
+            <Icon icon="game-icons:plus" className="inline-block mr-1 text-base" /> Add Game
           </button>
         </div>
       </header>
@@ -416,7 +417,7 @@ export default function CollectionScreen() {
         <div className={`launch-notice-bar ${notice.type}`}>
           <span>{notice.message}</span>
           <button className="launch-notice-close" onClick={() => setNotice(null)}>
-            ×
+            <Icon icon="game-icons:cancel" className="text-base" />
           </button>
         </div>
       )}
@@ -424,7 +425,7 @@ export default function CollectionScreen() {
       {/* Toolbar: Search, Category Pills, and Filters */}
       <div className="collection-toolbar">
         <div className="collection-search-wrap">
-          <span className="search-icon">🔍</span>
+          <Icon icon="game-icons:magnifying-glass" className="search-icon text-ui-accent text-lg" />
           <input
             type="text"
             className="collection-search-input"
@@ -434,7 +435,7 @@ export default function CollectionScreen() {
           />
           {searchQuery && (
             <button className="clear-search-btn" onClick={() => setSearchQuery("")}>
-              ✕
+              <Icon icon="game-icons:cancel" className="text-sm" />
             </button>
           )}
         </div>
@@ -467,7 +468,9 @@ export default function CollectionScreen() {
               checked={onlyWithExecutable}
               onChange={(e) => setOnlyWithExecutable(e.target.checked)}
             />
-            <span>🚀 Executable Linked Only</span>
+            <span>
+              <Icon icon="game-icons:rocket" className="inline-block mr-1 text-ui-accent" /> Executable Linked Only
+            </span>
           </label>
 
           <button
@@ -475,7 +478,7 @@ export default function CollectionScreen() {
             onClick={() => setIsResetConfirmOpen(true)}
             title="Restore default game library"
           >
-            🔄 Reset Defaults
+            <Icon icon="game-icons:anticlockwise-rotation" className="inline-block mr-1 text-ui-accent" /> Reset Defaults
           </button>
         </div>
       </div>
@@ -484,7 +487,7 @@ export default function CollectionScreen() {
       <div className="collection-content">
         {filteredCategoryGroups.length === 0 ? (
           <div className="collection-empty-view">
-            <span className="empty-view-icon">🕹️</span>
+            <Icon icon="game-icons:game-console" className="empty-view-icon text-ui-accent text-5xl mb-2" />
             <h3>No Games Found</h3>
             <p>
               {searchQuery || onlyWithExecutable
@@ -510,7 +513,7 @@ export default function CollectionScreen() {
               {/* Category Header */}
               <div className="category-section-header">
                 <div className="category-header-title">
-                  <span style={{ fontSize: "1.2rem" }}>📁</span>
+                  <Icon icon="game-icons:open-folder" className="text-ui-accent text-xl mr-1" />
                   <h2 className="category-name">{categoryName}</h2>
                   <span className="category-count-badge">
                     {games.length} {games.length === 1 ? "game" : "games"}
@@ -523,7 +526,7 @@ export default function CollectionScreen() {
                     onClick={() => openAddGameModal(categoryName)}
                     title={`Add new game directly to ${categoryName}`}
                   >
-                    + Add Game
+                    <Icon icon="game-icons:plus" className="inline-block mr-1 text-sm" /> Add Game
                   </button>
 
                   <button
@@ -534,7 +537,7 @@ export default function CollectionScreen() {
                     }}
                     title="Rename this category"
                   >
-                    ✏️ Rename
+                    <Icon icon="game-icons:pencil" className="inline-block mr-1 text-ui-accent text-sm" /> Rename
                   </button>
 
                   <button
@@ -548,7 +551,7 @@ export default function CollectionScreen() {
                     }
                     title="Delete this category"
                   >
-                    🗑️ Delete
+                    <Icon icon="game-icons:trash-can" className="inline-block mr-1 text-sm" /> Delete
                   </button>
                 </div>
               </div>
@@ -562,7 +565,7 @@ export default function CollectionScreen() {
                       className="coll-btn coll-btn-secondary coll-btn-sm"
                       onClick={() => openAddGameModal(categoryName)}
                     >
-                      + Add Game to {categoryName}
+                      <Icon icon="game-icons:plus" className="inline-block mr-1 text-sm" /> Add Game to {categoryName}
                     </button>
                   </div>
                 ) : (
@@ -594,7 +597,7 @@ export default function CollectionScreen() {
                             className="game-card-placeholder"
                             style={{ display: game.image ? "none" : "flex" }}
                           >
-                            🎃
+                            <Icon icon="game-icons:jack-o-lantern" className="text-ui-accent text-4xl" />
                           </div>
                           <div className="game-card-overlay" />
                           <span className="game-category-tag">{categoryName}</span>
@@ -619,7 +622,7 @@ export default function CollectionScreen() {
                           {hasExe ? (
                             <div className="game-exe-info">
                               <span className="exe-path-text" title={game.executablePath}>
-                                📁 {game.executablePath}
+                                <Icon icon="game-icons:open-folder" className="text-ui-accent inline-block mr-1 text-sm" /> {game.executablePath}
                               </span>
                               {isElectron && (
                                 <button
@@ -627,7 +630,7 @@ export default function CollectionScreen() {
                                   onClick={() => openGameFolder(game.executablePath)}
                                   title="Reveal file in Windows Explorer"
                                 >
-                                  📂
+                                  <Icon icon="game-icons:open-folder" className="text-ui-accent text-sm" />
                                 </button>
                               )}
                             </div>
@@ -648,11 +651,11 @@ export default function CollectionScreen() {
                               >
                                 {isLaunching ? (
                                   <>
-                                    <span>⏳</span> Launching...
+                                    <Icon icon="game-icons:anticlockwise-rotation" className="animate-spin inline-block mr-1 text-ui-accent" /> Launching...
                                   </>
                                 ) : (
                                   <>
-                                    <span>🚀</span> LAUNCH GAME
+                                    <Icon icon="game-icons:rocket" className="inline-block mr-1 text-ui-accent text-base" /> LAUNCH GAME
                                   </>
                                 )}
                               </button>
@@ -662,7 +665,7 @@ export default function CollectionScreen() {
                                 onClick={() => handlePickExecutable(categoryName, originalIndex, game)}
                                 title="Select executable file for this game"
                               >
-                                <span>📁</span> Link .exe
+                                <Icon icon="game-icons:open-folder" className="inline-block mr-1 text-sm" /> Link .exe
                               </button>
                             )}
 
@@ -671,7 +674,7 @@ export default function CollectionScreen() {
                               onClick={() => openEditGameModal(categoryName, originalIndex, game)}
                               title="Edit game configuration"
                             >
-                              ✏️
+                              <Icon icon="game-icons:pencil" className="text-ui-accent text-base" />
                             </button>
 
                             <button
@@ -686,7 +689,7 @@ export default function CollectionScreen() {
                               }
                               title="Delete game from collection"
                             >
-                              🗑️
+                              <Icon icon="game-icons:trash-can" className="text-base" />
                             </button>
                           </div>
                         </div>
@@ -707,12 +710,15 @@ export default function CollectionScreen() {
         <div className="coll-modal-overlay" onClick={() => setIsGameModalOpen(false)}>
           <div className="coll-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="coll-modal-header">
-              <h3 className="coll-modal-title">
-                <span>{editingGameInfo ? "✏️" : "➕"}</span>
+              <h3 className="coll-modal-title flex items-center">
+                <Icon
+                  icon={editingGameInfo ? "game-icons:pencil" : "game-icons:plus"}
+                  className="text-ui-accent inline-block mr-2 text-xl"
+                />
                 {editingGameInfo ? `Edit "${editingGameInfo.game.name}"` : "Add New Game"}
               </h3>
               <button className="coll-modal-close-btn" onClick={() => setIsGameModalOpen(false)}>
-                ✕
+                <Icon icon="game-icons:cancel" className="text-base" />
               </button>
             </div>
 
@@ -730,7 +736,7 @@ export default function CollectionScreen() {
                         style={{
                           background: "none",
                           border: "none",
-                          color: "#ff9142",
+                          color: "var(--color-ui-accent, #ff9142)",
                           cursor: "pointer",
                           fontSize: "0.74rem",
                           fontWeight: 600,
@@ -803,7 +809,7 @@ export default function CollectionScreen() {
                         onClick={() => handlePickExecutable()}
                         title="Browse for executable file"
                       >
-                        📂 Browse
+                        <Icon icon="game-icons:open-folder" className="text-ui-accent inline-block mr-1 text-sm" /> Browse
                       </button>
                     )}
                   </div>
@@ -904,9 +910,12 @@ export default function CollectionScreen() {
         <div className="coll-modal-overlay" onClick={() => setIsNewCatModalOpen(false)}>
           <div className="coll-modal-card" style={{ maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
             <div className="coll-modal-header">
-              <h3 className="coll-modal-title">📁 New Category</h3>
+              <h3 className="coll-modal-title flex items-center">
+                <Icon icon="game-icons:open-folder" className="text-ui-accent inline-block mr-2 text-xl" />
+                New Category
+              </h3>
               <button className="coll-modal-close-btn" onClick={() => setIsNewCatModalOpen(false)}>
-                ✕
+                <Icon icon="game-icons:cancel" className="text-base" />
               </button>
             </div>
             <form onSubmit={handleCreateCategory}>
@@ -946,9 +955,12 @@ export default function CollectionScreen() {
         <div className="coll-modal-overlay" onClick={() => setRenameCatTarget(null)}>
           <div className="coll-modal-card" style={{ maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
             <div className="coll-modal-header">
-              <h3 className="coll-modal-title">✏️ Rename Category</h3>
+              <h3 className="coll-modal-title flex items-center">
+                <Icon icon="game-icons:pencil" className="text-ui-accent inline-block mr-2 text-xl" />
+                Rename Category
+              </h3>
               <button className="coll-modal-close-btn" onClick={() => setRenameCatTarget(null)}>
-                ✕
+                <Icon icon="game-icons:cancel" className="text-base" />
               </button>
             </div>
             <form onSubmit={handleRenameCategorySubmit}>
@@ -987,11 +999,12 @@ export default function CollectionScreen() {
         <div className="coll-modal-overlay" onClick={() => setConfirmDeleteTarget(null)}>
           <div className="coll-modal-card" style={{ maxWidth: "440px" }} onClick={(e) => e.stopPropagation()}>
             <div className="coll-modal-header">
-              <h3 className="coll-modal-title" style={{ color: "#ff5555" }}>
-                🗑️ Confirm Deletion
+              <h3 className="coll-modal-title flex items-center" style={{ color: "#ff5555" }}>
+                <Icon icon="game-icons:trash-can" className="text-red-400 inline-block mr-2 text-xl" />
+                Confirm Deletion
               </h3>
               <button className="coll-modal-close-btn" onClick={() => setConfirmDeleteTarget(null)}>
-                ✕
+                <Icon icon="game-icons:cancel" className="text-base" />
               </button>
             </div>
             <div className="coll-modal-body">
@@ -1003,8 +1016,9 @@ export default function CollectionScreen() {
                 ?
               </p>
               {confirmDeleteTarget.type === "cat" && (
-                <p style={{ margin: 0, fontSize: "0.8rem", color: "#ff8888" }}>
-                  ⚠️ This will also delete all games inside this category!
+                <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: "#ff8888", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Icon icon="game-icons:hazard-sign" className="inline-block text-base" />
+                  This will also delete all games inside this category!
                 </p>
               )}
             </div>
@@ -1033,9 +1047,12 @@ export default function CollectionScreen() {
         <div className="coll-modal-overlay" onClick={() => setIsResetConfirmOpen(false)}>
           <div className="coll-modal-card" style={{ maxWidth: "440px" }} onClick={(e) => e.stopPropagation()}>
             <div className="coll-modal-header">
-              <h3 className="coll-modal-title">🔄 Reset to Defaults</h3>
+              <h3 className="coll-modal-title flex items-center">
+                <Icon icon="game-icons:anticlockwise-rotation" className="text-ui-accent inline-block mr-2 text-xl" />
+                Reset to Defaults
+              </h3>
               <button className="coll-modal-close-btn" onClick={() => setIsResetConfirmOpen(false)}>
-                ✕
+                <Icon icon="game-icons:cancel" className="text-base" />
               </button>
             </div>
             <div className="coll-modal-body">

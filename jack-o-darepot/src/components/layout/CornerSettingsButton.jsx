@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "@iconify/react";
 import { useNavigation } from "../../navigation/NavigationContext";
 import { SCREENS } from "../../navigation/screens";
 
@@ -6,7 +7,7 @@ export default function CornerSettingsButton() {
   const { currentScreen, navigate } = useNavigation();
 
   return (
-    <div className="corner-actions-dock">
+    <div className="corner-actions-dock" role="navigation" aria-label="Quick Navigation">
       {currentScreen !== SCREENS.GAME && (
         <button
           className="corner-btn corner-game-btn"
@@ -14,7 +15,8 @@ export default function CornerSettingsButton() {
           title="Return to Reels (Esc)"
           aria-label="Return to Reels"
         >
-          <span className="corner-btn-icon">🎰</span>
+          <Icon icon="game-icons:slot-machine" className="corner-btn-icon text-xl" />
+          <span className="corner-btn-hotkey">ESC</span>
         </button>
       )}
 
@@ -25,7 +27,20 @@ export default function CornerSettingsButton() {
           title="Game Collection (Press C)"
           aria-label="Open Collection"
         >
-          <span className="corner-btn-icon">🎮</span>
+          <Icon icon="game-icons:retro-controller" className="corner-btn-icon text-xl" />
+          <span className="corner-btn-hotkey">C</span>
+        </button>
+      )}
+
+      {currentScreen !== SCREENS.LEADERBOARD && (
+        <button
+          className="corner-btn corner-leaderboard-btn"
+          onClick={() => navigate(SCREENS.LEADERBOARD)}
+          title="Leaderboard (Press L)"
+          aria-label="Open Leaderboard"
+        >
+          <Icon icon="game-icons:trophy" className="corner-btn-icon text-xl" />
+          <span className="corner-btn-hotkey">L</span>
         </button>
       )}
 
@@ -36,7 +51,8 @@ export default function CornerSettingsButton() {
           title="Settings (Press S)"
           aria-label="Open Settings"
         >
-          <span className="corner-btn-icon">⚙️</span>
+          <Icon icon="game-icons:gears" className="corner-btn-icon text-xl" />
+          <span className="corner-btn-hotkey">S</span>
         </button>
       )}
     </div>

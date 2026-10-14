@@ -1,10 +1,11 @@
+/* SpinResultPopup.css - Retro 8-bit Dare Popup Modal */
+
 .popup-overlay {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(4, 3, 7, 0.85);
-  backdrop-filter: blur(10px);
+  background-color: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -14,17 +15,13 @@
 }
 
 .popup-card {
-  background: linear-gradient(180deg, #1b1625 0%, #0e0c15 100%);
-  border: 2px solid rgba(255, 110, 20, 0.45);
-  border-radius: 20px;
-  padding: 32px 32px 28px 32px;
+  background: var(--ui-bg-surface);
+  border: 3px solid var(--ui-border);
+  padding: 28px 28px 24px 28px;
   width: 480px;
   max-width: 95%;
   text-align: center;
-  box-shadow: 
-    0 25px 60px rgba(0, 0, 0, 0.9),
-    0 0 40px rgba(255, 98, 0, 0.3),
-    inset 0 1px 2px rgba(255, 255, 255, 0.15);
+  box-shadow: 8px 8px 0px #000000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -33,12 +30,8 @@
 }
 
 .popup-card.cursed {
-  background: linear-gradient(180deg, #2a0913 0%, #120307 100%);
-  border-color: rgba(255, 23, 68, 0.65);
-  box-shadow: 
-    0 25px 60px rgba(0, 0, 0, 0.95),
-    0 0 50px rgba(255, 23, 68, 0.45),
-    inset 0 1px 2px rgba(255, 60, 90, 0.2);
+  border-color: var(--ui-cursed);
+  box-shadow: 8px 8px 0px #000000, 0 0 25px var(--ui-cursed-alpha-40);
 }
 
 .popup-badge {
@@ -47,17 +40,15 @@
   font-weight: 800;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: #ffaa55;
-  background: rgba(255, 98, 0, 0.15);
-  border: 1px solid rgba(255, 98, 0, 0.35);
+  color: var(--ui-accent-glow);
+  background: var(--ui-bg-surface-elevated);
+  border: 1px solid var(--ui-border);
   padding: 4px 14px;
-  border-radius: 20px;
 }
 
 .popup-badge.cursed {
-  color: #ff4d6d;
-  background: rgba(255, 23, 68, 0.2);
-  border-color: rgba(255, 23, 68, 0.5);
+  color: var(--ui-cursed);
+  border-color: var(--ui-cursed);
 }
 
 .popup-title {
@@ -66,13 +57,13 @@
   font-weight: 900;
   letter-spacing: 2px;
   margin: 0;
-  color: #ffffff;
-  text-shadow: 0 0 15px rgba(255, 120, 30, 0.6);
+  color: var(--ui-text-main);
+  text-shadow: 2px 2px 0px #000000;
+  text-transform: uppercase;
 }
 
 .popup-title.cursed {
-  color: #ff3355;
-  text-shadow: 0 0 18px rgba(255, 30, 70, 0.8);
+  color: var(--ui-cursed);
 }
 
 .popup-details {
@@ -84,9 +75,8 @@
 }
 
 .popup-detail-row {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  background: var(--ui-bg-surface-elevated);
+  border: 1px solid var(--ui-border-subtle);
   padding: 10px 14px;
   display: flex;
   justify-content: space-between;
@@ -95,19 +85,17 @@
 }
 
 .popup-detail-row.highlight-player {
-  background: rgba(255, 98, 0, 0.08);
-  border-color: rgba(255, 98, 0, 0.25);
+  border-color: var(--ui-border);
 }
 
 .popup-detail-row.highlight-game {
-  background: rgba(155, 93, 229, 0.1);
-  border-color: rgba(155, 93, 229, 0.3);
+  border-color: var(--ui-accent-glow);
 }
 
 .popup-label {
   font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 700;
+  color: var(--ui-text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -115,33 +103,33 @@
 .popup-value {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--ui-text-main);
 }
 
 .popup-value.player-name {
-  color: #ffaa44;
-  font-size: 1.25rem;
-  text-shadow: 0 0 10px rgba(255, 170, 68, 0.4);
+  color: var(--ui-accent-glow);
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 0px #000000;
 }
 
 .popup-value.game-name {
-  color: #e0aaff;
-  font-size: 1.25rem;
-  text-shadow: 0 0 10px rgba(155, 93, 229, 0.4);
+  color: #ffffff;
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 0px #000000;
 }
 
 .cursed-challenge-box {
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  background: rgba(255, 23, 68, 0.1);
-  border-color: rgba(255, 23, 68, 0.3);
+  background: var(--ui-cursed-alpha-20);
+  border-color: var(--ui-cursed);
 }
 
 .cursed-challenge-text {
   font-size: 1.05rem;
-  color: #ffccd5;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 700;
   margin: 0;
   line-height: 1.4;
   text-align: left;
@@ -149,51 +137,56 @@
 
 .popup-accept-btn {
   width: 100%;
-  padding: 13px;
-  border-radius: 12px;
+  padding: 12px;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
-  background: linear-gradient(180deg, #ff8533 0%, #ff5500 100%);
-  color: #ffffff;
-  border: none;
-  box-shadow: 0 8px 25px rgba(255, 98, 0, 0.45);
-  transition: all 0.2s ease;
+  background: var(--ui-accent);
+  color: #000000;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 0px #000000;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
   margin-top: 6px;
 }
 
 .popup-accept-btn:hover {
-  background: linear-gradient(180deg, #ffa366 0%, #ff6611 100%);
+  background: var(--ui-accent-hover);
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(255, 98, 0, 0.65);
+  box-shadow: 0 6px 0px #000000;
+}
+
+.popup-accept-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0px #000000;
 }
 
 .popup-accept-btn.cursed {
-  background: linear-gradient(180deg, #ff2a55 0%, #cc0022 100%);
-  box-shadow: 0 8px 25px rgba(255, 23, 68, 0.55);
+  background: var(--ui-cursed);
+  border-color: #ffffff;
+  color: #ffffff;
 }
 
 .popup-accept-btn.cursed:hover {
-  background: linear-gradient(180deg, #ff4d73 0%, #e60029 100%);
-  box-shadow: 0 10px 32px rgba(255, 23, 68, 0.75);
+  background: #ff3355;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0px #000000;
 }
 
 .popup-launch-btn {
   width: 100%;
-  padding: 13px;
-  border-radius: 12px;
+  padding: 12px;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
-  background: linear-gradient(135deg, #00e676 0%, #00b248 100%);
-  color: #ffffff;
-  border: none;
-  box-shadow: 0 8px 25px rgba(0, 230, 118, 0.45);
-  transition: all 0.2s ease;
+  background: var(--ui-success);
+  color: #000000;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 0px #000000;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
   margin-top: 6px;
   display: flex;
   align-items: center;
@@ -202,12 +195,111 @@
 }
 
 .popup-launch-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1de9b6 0%, #00c853 100%);
+  filter: brightness(1.15);
   transform: translateY(-2px);
-  box-shadow: 0 10px 32px rgba(0, 230, 118, 0.65);
+  box-shadow: 0 6px 0px #000000;
+}
+
+.popup-launch-btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0px #000000;
 }
 
 .popup-launch-btn:disabled {
   opacity: 0.75;
   cursor: wait;
+}
+
+/* Dare Outcome Resolution Buttons */
+.popup-dare-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.popup-outcome-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.popup-outcome-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+
+.popup-outcome-btn.win-action {
+  background: var(--ui-success);
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.popup-outcome-btn.lose-action {
+  background: var(--ui-cursed);
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.popup-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.popup-leaderboard-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #000000;
+  border: 2px solid var(--ui-border);
+  color: var(--ui-accent);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.popup-leaderboard-link:hover {
+  background: var(--ui-accent);
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.popup-resolved-banner {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.popup-resolved-banner.won {
+  background: var(--ui-success);
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.popup-resolved-banner.lost {
+  background: var(--ui-cursed);
+  color: #ffffff;
+  border-color: #ffffff;
 }

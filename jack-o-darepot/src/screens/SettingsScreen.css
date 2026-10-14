@@ -1,57 +1,60 @@
+/* SettingsScreen.css - Retro 8-bit Settings Screen */
+
 .settings-screen {
   width: 100%;
-  max-width: 820px;
+  max-width: 840px;
   height: 100%;
   max-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #171420 0%, #0d0c14 100%);
-  border: 1.5px solid rgba(255, 110, 30, 0.35);
-  border-radius: 20px;
-  box-shadow: 
-    0 25px 60px rgba(0, 0, 0, 0.9),
-    0 0 35px rgba(255, 98, 0, 0.22);
+  background: var(--ui-bg-surface);
+  border: 3px solid var(--ui-border);
+  box-shadow: 8px 8px 0px #000000;
   overflow: hidden;
   margin: 0 auto;
 }
 
 .settings-screen-header {
-  padding: 16px 24px;
-  background: rgba(10, 9, 14, 0.7);
-  border-bottom: 1px solid rgba(255, 98, 0, 0.18);
+  padding: 14px 20px;
+  background: var(--ui-bg-surface-elevated);
+  border-bottom: 2px solid var(--ui-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .screen-back-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #c8c5d6;
-  padding: 7px 14px;
-  border-radius: 8px;
+  background: var(--ui-bg-surface);
+  border: 2px solid var(--ui-border);
+  color: var(--ui-text-main);
+  padding: 6px 14px;
   font-family: var(--font-ui);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0px #000000;
+  transition: all 0.1s ease;
 }
 
 .screen-back-btn:hover {
-  background: rgba(255, 98, 0, 0.18);
-  border-color: rgba(255, 98, 0, 0.4);
-  color: #ffffff;
-  transform: translateX(-2px);
+  background: var(--ui-accent);
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.screen-back-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 /* Preset Management Styles */
 .preset-hero-box {
-  background: linear-gradient(135deg, rgba(255, 117, 24, 0.1) 0%, rgba(138, 43, 226, 0.08) 100%);
-  border: 1px solid rgba(255, 117, 24, 0.25);
-  border-radius: 12px;
+  background: var(--ui-bg-surface-elevated);
+  border: 2px solid var(--ui-border);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -62,9 +65,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: #000000;
+  border: 1px solid var(--ui-border-subtle);
   padding: 8px 12px;
 }
 
@@ -76,13 +78,14 @@
 
 .preset-info-title {
   font-size: 0.88rem;
-  font-weight: 700;
-  color: #ffaa55;
+  font-weight: 800;
+  color: var(--ui-accent-glow);
+  text-transform: uppercase;
 }
 
 .preset-info-desc {
   font-size: 0.75rem;
-  color: #a8a4b8;
+  color: var(--ui-text-muted);
 }
 
 .preset-chips-wrap {
@@ -92,13 +95,13 @@
 }
 
 .preset-chip {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #d8d5e8;
+  background: #000000;
+  border: 1px solid var(--ui-border);
+  color: var(--ui-text-main);
   padding: 3px 8px;
-  border-radius: 6px;
   font-size: 0.72rem;
   font-family: var(--font-mono);
+  text-transform: uppercase;
 }
 
 .preset-input-wrap {
@@ -110,38 +113,35 @@
 
 .preset-text-input {
   flex: 1;
-  background: rgba(10, 8, 16, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
+  background: #000000;
+  border: 2px solid var(--ui-border);
   padding: 8px 12px;
   color: #ffffff;
   font-family: var(--font-ui);
   font-size: 0.84rem;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-weight: 700;
 }
 
 .preset-text-input:focus {
-  border-color: #ff7518;
-  box-shadow: 0 0 8px rgba(255, 117, 24, 0.35);
+  border-color: #ffffff;
 }
 
 .preset-text-input::placeholder {
-  color: #6a667e;
+  color: var(--ui-text-muted);
 }
 
 .preset-notice-badge {
-  background: rgba(16, 224, 80, 0.15);
-  border: 1px solid rgba(16, 224, 80, 0.4);
-  color: #70ff9a;
-  border-radius: 8px;
+  background: #000000;
+  border: 2px solid var(--ui-success);
+  color: var(--ui-success);
   padding: 8px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
   display: flex;
   align-items: center;
   gap: 8px;
-  animation: fadeIn 0.25s ease;
 }
 
 .palette-swatches-row {
@@ -154,10 +154,8 @@
 .palette-swatch-chip {
   width: 32px;
   height: 18px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-  transition: transform 0.15s ease;
+  border: 1px solid #ffffff;
+  box-shadow: 2px 2px 0px #000000;
 }
 
 .palette-swatch-chip:hover {
@@ -174,15 +172,60 @@
 .logo-texture-thumb {
   width: 44px;
   height: 44px;
-  border-radius: 8px;
-  border: 1.5px solid rgba(255, 117, 24, 0.4);
-  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--ui-border);
+  background: #000000;
   object-fit: contain;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  box-shadow: 2px 2px 0px #000000;
   image-rendering: pixelated;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+/* UI Theme Presets Grid */
+.ui-theme-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.ui-theme-preset-btn {
+  background: var(--ui-bg-surface-elevated);
+  border: 2px solid var(--ui-border-subtle);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.1s ease;
+}
+
+.ui-theme-preset-btn:hover {
+  border-color: var(--ui-border);
+  background: var(--ui-accent-alpha-15);
+}
+
+.ui-theme-preset-btn.active {
+  border-color: #ffffff;
+  background: var(--ui-accent-alpha-25);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.ui-theme-preset-btn-name {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ui-text-main);
+  text-transform: uppercase;
+}
+
+.ui-theme-preset-swatches {
+  display: flex;
+  height: 8px;
+  width: 100%;
+  gap: 2px;
+}
+
+.ui-theme-preset-swatch {
+  flex: 1;
+  height: 100%;
 }

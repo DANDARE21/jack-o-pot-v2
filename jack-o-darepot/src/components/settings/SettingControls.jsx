@@ -1,11 +1,23 @@
 import React from "react";
+import { Icon } from "@iconify/react";
 
 export function SettingSection({ title, icon, description, children }) {
+  const renderIcon = () => {
+    if (!icon) return null;
+    if (typeof icon === "string") {
+      if (icon.includes(":")) {
+        return <Icon icon={icon} className="setting-section-icon text-ui-accent inline-block text-lg" />;
+      }
+      return <span className="setting-section-icon">{icon}</span>;
+    }
+    return <span className="setting-section-icon">{icon}</span>;
+  };
+
   return (
     <div className="setting-section">
       <div className="setting-section-header">
         <div className="setting-section-title-wrap">
-          {icon && <span className="setting-section-icon">{icon}</span>}
+          {renderIcon()}
           <h3 className="setting-section-title">{title}</h3>
         </div>
         {description && <p className="setting-section-desc">{description}</p>}
@@ -99,14 +111,46 @@ export function SettingButton({
   variant = "secondary",
   disabled,
 }) {
+  const renderIcon = () => {
+    if (!icon) return null;
+    if (typeof icon === "string") {
+      if (icon.includes(":")) {
+        return <Icon icon={icon} className="setting-btn-icon text-base" />;
+      }
+      return <span className="setting-btn-icon">{icon}</span>;
+    }
+    return <span className="setting-btn-icon">{icon}</span>;
+  };
+
   return (
     <button
       className={`setting-btn setting-btn-${variant}`}
       onClick={onClick}
       disabled={disabled}
     >
-      {icon && <span className="setting-btn-icon">{icon}</span>}
+      {renderIcon()}
       <span>{label}</span>
     </button>
+  );
+}
+
+export function SettingColorPicker({
+  value = "#ff6200",
+  onChange,
+  disabled,
+  label,
+}) {
+  return (
+    <div className="setting-color-wrap">
+      <input
+        type="color"
+        className="setting-color-input"
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        disabled={disabled}
+      />
+      <span className="setting-color-hex">{value.toUpperCase()}</span>
+      {label && <span className="setting-color-label">{label}</span>}
+    </div>
   );
 }

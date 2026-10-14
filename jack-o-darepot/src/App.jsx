@@ -9,13 +9,13 @@ import "./App.css";
 
 function AppShell() {
   const { settings } = useSettings();
-  const { isFullscreen } = useGame();
+  const { isFullscreen, isSpinning } = useGame();
 
   return (
     <div
       className={`app-container atmosphere-${settings.spookyAtmosphere || "high"} ${
         isFullscreen ? "is-fullscreen" : ""
-      }`}
+      } ${isSpinning ? "is-spinning-active" : ""}`}
     >
       {/* Sound Reactive Animated WebGL Background */}
       <ReactiveBackground />
