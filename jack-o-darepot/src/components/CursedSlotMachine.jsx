@@ -5,7 +5,8 @@ import { Howl } from "howler";
 import "./SlotMachine.css";
 
 const CursedSlotMachine = forwardRef(
-  ({ players, gamesByCategory, challenges, messages, spinning }, ref) => {
+  ({ players, gamesByCategory, challenges, messages, spinning, fastSpinMode = false }, ref) => {
+    const durationMult = fastSpinMode ? 0.5 : 1;
     const [player, setPlayer] = useState("?");
     const [game, setGame] = useState("?");
     const [challengeName, setChallengeName] = useState("?");
@@ -71,7 +72,7 @@ const CursedSlotMachine = forwardRef(
 
           console.log("[CursedSlotMachine] Finished spin with:", result);
           if (onComplete) onComplete(result);
-        }, 8100);
+        }, Math.round(8100 * durationMult));
       },
     }));
 
@@ -83,49 +84,55 @@ const CursedSlotMachine = forwardRef(
     };
 
     return (
-      <div className="slot-machine-background cursed">
-        <div className="slot-machine-container" style={{ position: "relative" }}>
+      <div className="slot-machine-cabinet cursed">
+        {/* Arcade Marquee Header */}
+        <div className="marquee-bar cursed">
+          <div className="marquee-indicator cursed" />
           <motion.div
-            className="slot-textbox"
+            className="marquee-text cursed"
             initial={{ opacity: 0.9 }}
-            animate={{ opacity: [0.9, 1, 0.9] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            animate={{ opacity: [0.75, 1, 0.75] }}
+            transition={{ duration: 1.2, repeat: Infinity }}
           >
-            {displayText || "The machine whispers..."}
+            {displayText || "💀 CURSED REELS ACTIVATED 💀"}
           </motion.div>
+          <div className="marquee-indicator cursed" />
+        </div>
 
-          <div className="slots-wrapper">
-            <SlotReel
-              items={players.map((p) => p.name || p)}
-              finalValue={player}
-              spinTime={4000}
-              spinning={spinning}
-              cursed={true}
-              pitch={1}
-            />
+        <div className="slots-wrapper">
+          <SlotReel
+            label="VICTIM"
+            items={players.map((p) => p.name || p)}
+            finalValue={player}
+            spinTime={Math.round(4000 * durationMult)}
+            spinning={spinning}
+            cursed={true}
+            pitch={1}
+          />
 
-            <SlotReel
-              items={allGames.map((g) => ({
-                name: g.name,
-                image: g.image || null,
-              }))}
-              finalValue={game}
-              spinTime={6000}
-              spinning={spinning}
-              cursed={true}
-              pitch={1.15}
-              getRandomImage={getRandomImage}
-            />
+          <SlotReel
+            label="GAME"
+            items={allGames.map((g) => ({
+              name: g.name,
+              image: g.image || null,
+            }))}
+            finalValue={game}
+            spinTime={Math.round(6000 * durationMult)}
+            spinning={spinning}
+            cursed={true}
+            pitch={1.15}
+            getRandomImage={getRandomImage}
+          />
 
-            <SlotReel
-              items={challenges.map((c) => c.name || "Unknown Challenge")}
-              finalValue={challengeName}
-              spinTime={8000}
-              spinning={spinning}
-              cursed={true}
-              pitch={1.3}
-            />
-          </div>
+          <SlotReel
+            label="CURSED DARE"
+            items={challenges.map((c) => c.name || "Unknown Challenge")}
+            finalValue={challengeName}
+            spinTime={Math.round(8000 * durationMult)}
+            spinning={spinning}
+            cursed={true}
+            pitch={1.3}
+          />
         </div>
       </div>
     );

@@ -1,42 +1,240 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at 50% 30%, #1e1327 0%, #0c0a13 55%, #050508 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient Halloween haze & vignette */
+.app-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 15% 85%, rgba(255, 98, 0, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(155, 93, 229, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(255, 177, 0, 0.03) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.4s ease;
+}
+
+.app-container.atmosphere-off::before {
+  display: none;
+}
+
+.app-container.atmosphere-low::before {
+  opacity: 0.35;
+}
+
+.app-container.atmosphere-high::before {
+  opacity: 1;
+}
+
+.app-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px 20px 24px;
+  position: relative;
+  z-index: 2;
+  overflow-y: auto;
+  width: 100%;
+}
+
+/* Navigator Viewport & Screen Wrapper */
+.navigator-viewport {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.navigator-screen-wrapper {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-screen-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen-fallback {
   text-align: center;
+  padding: 40px;
+  background: rgba(18, 16, 26, 0.7);
+  border: 1px solid rgba(255, 98, 0, 0.3);
+  border-radius: 16px;
+  color: #fff;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* App Header */
+.app-header {
+  text-align: center;
+  margin-bottom: 12px;
+  user-select: none;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.app-title {
+  font-family: var(--font-brand);
+  font-size: 2.3rem;
+  letter-spacing: 4px;
+  font-weight: 900;
+  margin: 0;
+  background: linear-gradient(180deg, #fff3e0 0%, #ff8c42 50%, #ff5500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 98, 0, 0.65));
+  transition: all 0.3s ease;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.app-subtitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.card {
-  padding: 2em;
+.app-subtitle span.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+  box-shadow: 0 0 6px var(--accent-orange);
 }
 
-.read-the-docs {
-  color: #888;
+/* App Header Navigation Tabs */
+.app-nav-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  background: rgba(18, 15, 26, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 110, 30, 0.25);
+  border-radius: 30px;
+  padding: 4px 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
+
+.app-nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #a8a4bc;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.app-nav-tab:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-nav-tab.active {
+  background: linear-gradient(135deg, rgba(255, 117, 24, 0.3) 0%, rgba(255, 75, 0, 0.15) 100%);
+  border-color: rgba(255, 117, 24, 0.45);
+  color: #ffaa55;
+  box-shadow: 0 0 12px rgba(255, 117, 24, 0.3);
+}
+
+.app-nav-tab .tab-icon {
+  font-size: 1rem;
+}
+
+.nav-hotkey-badge {
+  font-size: 0.65rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #d8d5e8;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+/* Floating Corner Action Dock */
+.corner-actions-dock {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 999;
+}
+
+.corner-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(18, 15, 26, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 110, 30, 0.35);
+  color: #ffaa55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 98, 0, 0.15);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.corner-btn:hover {
+  background: rgba(255, 98, 0, 0.25);
+  border-color: #ff7518;
+  color: #ffffff;
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 117, 24, 0.5);
+}
+
+.corner-btn:active {
+  transform: scale(0.96) translateY(0);
+}
+
+.corner-btn-icon {
+  font-size: 1.3rem;
+  filter: drop-shadow(0 0 4px rgba(255, 110, 30, 0.4));
+  transition: transform 0.35s ease;
+}
+
+.corner-settings-btn:hover .corner-btn-icon {
+  transform: rotate(60deg);
+}
+
+.corner-coll-btn:hover .corner-btn-icon {
+  transform: scale(1.15) rotate(-10deg);
+}
+
+

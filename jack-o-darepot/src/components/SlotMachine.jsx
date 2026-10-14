@@ -14,9 +14,13 @@ const SlotMachine = forwardRef(
       resetCurse,
       setSpinCount,
       spinning,
+      fastSpinMode = false,
+      baseCurseChance = 5,
+      maxCurseCap = 100,
     },
     ref
   ) => {
+    const durationMult = fastSpinMode ? 0.5 : 1;
     const [player, setPlayer] = useState("?");
     const [category, setCategory] = useState("?");
     const [game, setGame] = useState("?");
@@ -75,7 +79,7 @@ const SlotMachine = forwardRef(
           return next;
         });
 
-        const curseChance = Math.min(curseMeter / 2, 50);
+        const curseChance = Math.min((baseCurseChance || 5) + (curseMeter / 2), (maxCurseCap || 100) / 2);
         const isCursed = Math.random() * 100 < curseChance;
         setCursed(isCursed);
 
@@ -120,7 +124,7 @@ const SlotMachine = forwardRef(
             onComplete(isCursed, result);
           }
           
-        }, 8100);
+        }, Math.round(8100 * durationMult));
       },
     }));
 
@@ -132,68 +136,77 @@ const SlotMachine = forwardRef(
     };
 
     return (
-      <div className="slot-machine-background">
-        <div className="slot-machine-container" style={{ position: "relative" }}>
-          {/* Arcade-style glowing text box */}
+      <div className="slot-machine-cabinet">
+        {/* Arcade Marquee Header */}
+        <div className="marquee-bar">
+          <div className="marquee-indicator" />
           <motion.div
-            className="slot-textbox"
+            className="marquee-text"
             initial={{ opacity: 0.9 }}
-            animate={{ opacity: [0.9, 1, 0.9] }}
+            animate={{ opacity: [0.85, 1, 0.85] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            {displayText || "No coins needed."}
+            {displayText || "SPIN THE REELS • SEAL YOUR FATE"}
           </motion.div>
+          <div className="marquee-indicator" />
+        </div>
 
-          <div className="slots-wrapper">
-            <SlotReel
-              items={players}
-              finalValue={player}
-              spinTime={4000}
-              spinning={spinning}
-              cursed={cursed}
-              pitch={1}
-            />
+        {/* Reels Wrapper */}
+        <div className="slots-wrapper">
+          <SlotReel
+            label="PLAYER"
+            items={players}
+            finalValue={player}
+            spinTime={Math.round(4000 * durationMult)}
+            spinning={spinning}
+            cursed={cursed}
+            pitch={1}
+          />
 
-            <SlotReel
-              items={categories}
-              finalValue={category}
-              spinTime={6000}
-              spinning={spinning}
-              cursed={cursed}
-              pitch={1.1}
-            />
+          <SlotReel
+            label="CATEGORY"
+            items={categories}
+            finalValue={category}
+            spinTime={Math.round(6000 * durationMult)}
+            spinning={spinning}
+            cursed={cursed}
+            pitch={1.1}
+          />
 
-            {/* 🎮 Game reel: show images while spinning */}
-            <SlotReel
-              items={allGames.map((g) => ({
-                name: g.name,
-                image: g.image || null,
-              }))}
-              finalValue={game}
-              spinTime={8000}
-              spinning={spinning}
-              cursed={cursed}
-              pitch={1.25}
-              getRandomImage={getRandomImage} // ✅ pass down random image generator
+          {/* 🎮 Game reel: show images while spinning */}
+          <SlotReel
+            label="GAME"
+            items={allGames.map((g) => ({
+              name: g.name,
+              image: g.image || null,
+            }))}
+            finalValue={game}
+            spinTime={Math.round(8000 * durationMult)}
+            spinning={spinning}
+            cursed={cursed}
+            pitch={1.25}
+            getRandomImage={getRandomImage}
+          />
+        </div>
+
+        {/* Curse Bar / Gauge */}
+        <div className="curse-gauge-container">
+          <div className="curse-gauge-header">
+            <span className="curse-gauge-title">💀 CURSE METER</span>
+            <span className="curse-gauge-value">{curseMeter}%</span>
+          </div>
+          <div className="curse-track">
+            <motion.div
+              className="curse-bar-fill"
+              style={{ width: `${Math.min(curseMeter, 100)}%` }}
+              animate={
+                curseMeter > 50
+                  ? { opacity: [0.85, 1, 0.85] }
+                  : { opacity: 1 }
+              }
+              transition={{ duration: 0.5, repeat: Infinity }}
             />
           </div>
-
-          {/* Curse Bar */}
-          <motion.div
-            className="curse-bar"
-            style={{ marginTop: "12px", width: "100%" }}
-            animate={
-              curseMeter > 0
-                ? { boxShadow: ["0 0 10px red", "0 0 25px red", "0 0 10px red"] }
-                : { boxShadow: "none" }
-            }
-            transition={{
-              duration: 0.6,
-              repeat: curseMeter > 0 ? Infinity : 0,
-            }}
-          >
-            <div className="curse-fill" style={{ width: `${curseMeter}%` }} />
-          </motion.div>
         </div>
       </div>
     );

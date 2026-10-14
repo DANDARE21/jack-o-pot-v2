@@ -23,16 +23,17 @@ export default function CursedText({ trigger }) {
           exit={{ opacity: 0, scale: 0.5 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
           style={{
-            position: "absolute",
+            position: "fixed",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            color: "red",
-            fontSize: "5rem",
-            fontWeight: "bold",
-            textShadow: "0 0 10px red, 0 0 20px red",
-            pointerEvents: "none", // so it doesn't block clicks
-            zIndex: 999,
+            color: "#ff1744",
+            fontFamily: "var(--font-cursed), cursive",
+            fontSize: "6.5rem",
+            letterSpacing: "8px",
+            textShadow: "0 0 20px #ff1744, 0 0 40px #ff0033, 0 0 80px #b30024",
+            pointerEvents: "none",
+            zIndex: 99999,
           }}
         >
           CURSED!

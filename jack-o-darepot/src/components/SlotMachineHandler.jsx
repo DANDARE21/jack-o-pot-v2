@@ -4,18 +4,28 @@ import CursedSlotMachine from "./CursedSlotMachine";
 import { motion } from "framer-motion";
 import CursedText from "./CursedText";
 import SpinResultPopup from "./SpinResultPopup";
+import { useElectron } from "../hooks/useElectron";
+import { useSettings } from "../context/SettingsContext";
+import { useGame } from "../context/GameContext";
 import "./SlotMachineHandler.css";
 
-export default function SlotMachineHandler({ players, gamesByCategory }) {
-  // Persistent state
-  const [curseMeter, setCurseMeter] = useState(() => {
-    const stored = localStorage.getItem("curseMeter");
-    return stored ? parseInt(stored, 10) : 0;
-  });
-  const [spinCount, setSpinCount] = useState(() => {
-    const stored = localStorage.getItem("spinCount");
-    return stored ? parseInt(stored, 10) : 0;
-  });
+export default function SlotMachineHandler({
+  players: propPlayers,
+  gamesByCategory: propGamesByCategory,
+}) {
+  const { showNotification, beep } = useElectron();
+  const { settings } = useSettings();
+  const game = useGame();
+
+  const players = propPlayers ?? game.players;
+  const gamesByCategory = propGamesByCategory ?? game.gamesByCategory;
+  const {
+    curseMeter,
+    increaseCurse,
+    resetCurse,
+    spinCount,
+    setSpinCount,
+  } = game;
 
   const [spinning, setSpinning] = useState(false);
   const [cursedTrigger, setCursedTrigger] = useState(false);
@@ -28,14 +38,6 @@ export default function SlotMachineHandler({ players, gamesByCategory }) {
 
   const normalRef = useRef();
   const cursedRef = useRef();
-
-  // Persist values
-  useEffect(() => {
-    localStorage.setItem("curseMeter", curseMeter);
-  }, [curseMeter]);
-  useEffect(() => {
-    localStorage.setItem("spinCount", spinCount);
-  }, [spinCount]);
 
   // Load challenges/messages once (with logs)
   useEffect(() => {
@@ -60,9 +62,6 @@ export default function SlotMachineHandler({ players, gamesByCategory }) {
         console.error("[Handler] fetch messages error:", err);
       });
   }, []);
-
-  const increaseCurse = () => setCurseMeter((prev) => Math.min(prev + 10, 100));
-  const resetCurse = () => setCurseMeter(0);
 
   // Helper: normalize name extraction from different shapes (with logs)
   const nameOf = (item, label = "item") => {
@@ -143,6 +142,13 @@ export default function SlotMachineHandler({ players, gamesByCategory }) {
 
         console.log("[Handler] cursed resolved ->", { playerName, challengeName, challengeText });
 
+        if (settings.desktopNotifications) {
+          showNotification({
+            title: "💀 CURSED DARE DECIDED!",
+            body: `${playerName}: ${challengeName}`,
+          });
+        }
+
         setPopupData({
           type: "cursed",
           player: playerName,
@@ -203,6 +209,13 @@ export default function SlotMachineHandler({ players, gamesByCategory }) {
 
         if (isCursed) {
           console.log("[Handler] Normal spin reported CURSED.");
+          if (settings.systemBeepOnCurse) beep();
+          if (settings.desktopNotifications) {
+            showNotification({
+              title: "💀 CURSED REEL TRIGGERED!",
+              body: "The machine whispers back... cursed mode activated!",
+            });
+          }
           setCursedTrigger(true);
           resetCurse();
           setTimeout(() => {
@@ -219,15 +232,26 @@ export default function SlotMachineHandler({ players, gamesByCategory }) {
 
         console.log("[Handler] normal resolved ->", { playerName, categoryName, gameName });
 
+        if (settings.desktopNotifications) {
+          showNotification({
+            title: "🎃 JACK'O DAREPOT",
+            body: `${playerName} got ${gameName} (${categoryName})!`,
+          });
+        }
+
         // Update curse and spin count BEFORE popup
         increaseCurse();
         setSpinCount((prev) => prev + 1);
+
+        const gameObj = typeof result?.game === "object" ? result.game : null;
 
         setPopupData({
           type: "normal",
           player: playerName,
           category: categoryName,
           game: gameName,
+          executablePath: gameObj?.executablePath,
+          launchArgs: gameObj?.launchArgs,
           onClose: () => {
             console.log("[Handler] popup closed (normal)");
             setPopupData(null);
@@ -240,13 +264,13 @@ export default function SlotMachineHandler({ players, gamesByCategory }) {
   };
 
   return (
-    <div className="handler-container" style={{ position: "relative" }}>
+    <div className="handler-container">
       {/* Cursed overlay */}
       <CursedText trigger={cursedTrigger} />
 
       {/* Slot machine */}
       <motion.div
-        className="slot-machine-background"
+        className="handler-machine-wrapper"
         animate={spinning ? { x: [-3, 3, -3, 3, 0] } : { x: 0 }}
         transition={{ duration: 0.2, repeat: spinning ? Infinity : 0 }}
       >
@@ -262,6 +286,9 @@ export default function SlotMachineHandler({ players, gamesByCategory }) {
             setSpinCount={setSpinCount}
             spinning={spinning}
             messages={messages}
+            fastSpinMode={settings.fastSpinMode}
+            baseCurseChance={settings.baseCurseChance}
+            maxCurseCap={settings.maxCurseCap}
           />
         ) : (
           <CursedSlotMachine
@@ -271,30 +298,54 @@ export default function SlotMachineHandler({ players, gamesByCategory }) {
             challenges={challenges}
             messages={messages}
             spinning={spinning}
+            fastSpinMode={settings.fastSpinMode}
           />
         )}
       </motion.div>
 
-      {/* Status bar */}
-      <div className="status-bar">
-        <div className="spin-counter">🌀 Spins: {spinCount}</div>
-        <div className="curse-meter">💀 Curse Meter: {curseMeter}%</div>
-      </div>
+      {/* Arcade Dashboard & HUD */}
+      <div className="handler-controls-area">
+        <div className="arcade-hud-bar">
+          <div className="hud-stat-item">
+            <span className="hud-stat-label">TOTAL SPINS</span>
+            <span className="hud-stat-value">🌀 {spinCount}</span>
+          </div>
+          <div className="hud-divider" />
+          <div className="hud-stat-item">
+            <span className="hud-stat-label">LOADED PLAYERS</span>
+            <span className="hud-stat-value">👥 {players.length}</span>
+          </div>
+          <div className="hud-divider" />
+          <div className="hud-stat-item">
+            <span className="hud-stat-label">MACHINE STATUS</span>
+            <span className={`hud-stat-value ${spinning ? "status-spinning" : isCursedMode ? "status-cursed" : "status-ready"}`}>
+              {spinning ? "SPINNING..." : isCursedMode ? "CURSED" : "READY"}
+            </span>
+          </div>
+        </div>
 
-      {/* Spin button */}
-      <motion.button
-        className="spin-button"
-        onClick={startSpin}
-        disabled={spinning || !players.length}
-        animate={
-          spinning
-            ? { scale: [1, 1.1, 1], boxShadow: ["0 0 10px orange", "0 0 25px orange", "0 0 10px orange"] }
-            : { scale: 1, boxShadow: "none" }
-        }
-        transition={{ duration: 0.6, repeat: spinning ? Infinity : 0 }}
-      >
-        {isCursedMode ? "👿 CURSED SPIN" : "🎰 SPIN"}
-      </motion.button>
+        {/* Big Juicy Arcade Spin Button */}
+        <motion.button
+          className={`arcade-spin-button ${isCursedMode ? "cursed" : ""} ${spinning ? "spinning" : ""}`}
+          onClick={startSpin}
+          disabled={spinning || !players.length}
+          whileHover={!spinning && players.length ? { scale: 1.04 } : {}}
+          whileTap={!spinning && players.length ? { scale: 0.96 } : {}}
+        >
+          <span className="spin-btn-icon">
+            {spinning ? "🌀" : isCursedMode ? "👿" : "🎰"}
+          </span>
+          <span className="spin-btn-text">
+            {!players.length
+              ? "LOAD PLAYERS FIRST"
+              : spinning
+              ? "ROLLING FATE..."
+              : isCursedMode
+              ? "TRIGGER CURSED DARE"
+              : "SPIN THE DAREPOT"}
+          </span>
+        </motion.button>
+      </div>
 
       {/* Popup */}
       {popupData && <SpinResultPopup {...popupData} />}

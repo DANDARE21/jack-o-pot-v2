@@ -1,111 +1,177 @@
-
-
-.curse-bar {
-  width: 300px;
-  height: 20px;
-  background: #222;
-  border: 2px solid #ff7518;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  overflow: hidden;
-}
-
-.curse-fill {
-  height: 100%;
-  background: red;
-  transition: width 0.3s ease;
-}
-
 .handler-container {
-  position: relative; /* <-- needed for absolute particle positioning */
   width: 100%;
+  max-width: 860px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  
+  gap: 16px;
+  position: relative;
+  z-index: 5;
 }
 
-
-.slot-machine-background {
-  padding: 20px;
-  border-radius: 20px;
-  
-  display: inline-block;
-  background-image: "/assets/images/machineBg.png";
-}
-
-.spin-button {
-  width: 150px;
-  height: 50px;
-  font-size: 1rem;
-  border-radius: 10px;
-  background: #ff7518;
-  color: #fff;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 0 10px rgba(255, 117, 24, 0.7);
-}
-
-/* --- POPUP STYLES --- */
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6); /* dim background */
+.handler-machine-wrapper {
+  width: 100%;
   display: flex;
   justify-content: center;
+}
+
+/* Controls & HUD */
+.handler-controls-area {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  z-index: 9999; /* make sure it's above everything */
+  gap: 14px;
+  width: 100%;
+  margin-top: 4px;
 }
 
-.popup-content {
-  background: #222;
-  color: #fff;
-  border: 2px solid #ffcc00;
-  border-radius: 15px;
-  padding: 2rem;
-  width: 400px;
-  max-width: 90%;
-  text-align: center;
-  box-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
-  animation: popupFade 0.3s ease;
+/* HUD Bar */
+.arcade-hud-bar {
+  background: rgba(14, 12, 20, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 98, 0, 0.22);
+  border-radius: 40px;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-.popup-content h2 {
-  margin-top: 0;
-  font-size: 1.8rem;
+.hud-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-.popup-content p {
-  margin: 0.5rem 0;
-  font-size: 1.2rem;
+.hud-stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #8c889f;
+  letter-spacing: 1.5px;
 }
 
-.popup-content button {
-  margin-top: 1.5rem;
-  background-color: #ffcc00;
-  color: #222;
-  border: none;
-  border-radius: 10px;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
+.hud-stat-value {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.hud-stat-value.status-ready {
+  color: #4ade80;
+  text-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+}
+
+.hud-stat-value.status-spinning {
+  color: #ffaa33;
+  text-shadow: 0 0 8px rgba(255, 170, 51, 0.5);
+}
+
+.hud-stat-value.status-cursed {
+  color: #ff2a4b;
+  text-shadow: 0 0 10px rgba(255, 42, 75, 0.7);
+}
+
+.hud-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Big 3D Tactile Arcade Spin Button */
+.arcade-spin-button {
+  width: 100%;
+  max-width: 420px;
+  height: 60px;
+  border-radius: 16px;
+  font-family: var(--font-ui);
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  background: linear-gradient(180deg, #ff8533 0%, #ff5500 45%, #cc3700 100%);
+  color: #ffffff;
+  border: 2px solid #ffa366;
+  box-shadow: 
+    0 8px 0 #7a2200,
+    0 16px 30px rgba(255, 85, 0, 0.45),
+    inset 0 2px 2px rgba(255, 255, 255, 0.4);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
 }
 
-.popup-content button:hover {
-  background-color: #ffdb4d;
+.arcade-spin-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ff994d 0%, #ff6611 45%, #e63e00 100%);
+  box-shadow: 
+    0 9px 0 #7a2200,
+    0 20px 36px rgba(255, 85, 0, 0.6),
+    inset 0 2px 3px rgba(255, 255, 255, 0.5);
 }
 
-@keyframes popupFade {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.arcade-spin-button:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 
+    0 3px 0 #7a2200,
+    0 8px 16px rgba(255, 85, 0, 0.35),
+    inset 0 2px 1px rgba(0, 0, 0, 0.3);
+}
+
+.arcade-spin-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.arcade-spin-button.spinning {
+  animation: pulseSpinBtn 1s infinite alternate;
+}
+
+@keyframes pulseSpinBtn {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.15); box-shadow: 0 8px 0 #7a2200, 0 16px 35px rgba(255, 110, 20, 0.7); }
+}
+
+/* Cursed Mode Button */
+.arcade-spin-button.cursed {
+  background: linear-gradient(180deg, #ff2a55 0%, #d90429 45%, #8c0017 100%);
+  border-color: #ff6685;
+  box-shadow: 
+    0 8px 0 #4d000c,
+    0 16px 32px rgba(255, 23, 68, 0.55),
+    inset 0 2px 2px rgba(255, 120, 150, 0.4);
+}
+
+.arcade-spin-button.cursed:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ff476d 0%, #f00530 45%, #a3001b 100%);
+  box-shadow: 
+    0 9px 0 #4d000c,
+    0 20px 38px rgba(255, 23, 68, 0.75),
+    inset 0 2px 3px rgba(255, 150, 180, 0.5);
+}
+
+.arcade-spin-button.cursed:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 
+    0 3px 0 #4d000c,
+    0 8px 16px rgba(255, 23, 68, 0.4);
+}
+
+.spin-btn-icon {
+  font-size: 1.4rem;
+}
+
+.spin-btn-text {
+  font-size: 1.05rem;
+  letter-spacing: 1.8px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }

@@ -1,55 +1,213 @@
 .popup-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.65);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    animation: fadeIn 0.2s ease;
-  }
-  
-  .popup-content {
-    background: #1e1e1e;
-    color: #fff;
-    border-radius: 12px;
-    padding: 24px 32px;
-    box-shadow: 0 0 25px rgba(255, 165, 0, 0.6);
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    animation: zoomIn 0.25s ease;
-  }
-  
-  .popup-content h2 {
-    margin-top: 0;
-    color: orange;
-    margin-bottom: 12px;
-  }
-  
-  .popup-content button {
-    margin-top: 16px;
-    background: orange;
-    border: none;
-    color: black;
-    padding: 10px 22px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-  }
-  
-  .popup-content button:hover {
-    background: #ffcc66;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  @keyframes zoomIn {
-    from { transform: scale(0.85); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-  
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(4, 3, 7, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.popup-card {
+  background: linear-gradient(180deg, #1b1625 0%, #0e0c15 100%);
+  border: 2px solid rgba(255, 110, 20, 0.45);
+  border-radius: 20px;
+  padding: 32px 32px 28px 32px;
+  width: 480px;
+  max-width: 95%;
+  text-align: center;
+  box-shadow: 
+    0 25px 60px rgba(0, 0, 0, 0.9),
+    0 0 40px rgba(255, 98, 0, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.popup-card.cursed {
+  background: linear-gradient(180deg, #2a0913 0%, #120307 100%);
+  border-color: rgba(255, 23, 68, 0.65);
+  box-shadow: 
+    0 25px 60px rgba(0, 0, 0, 0.95),
+    0 0 50px rgba(255, 23, 68, 0.45),
+    inset 0 1px 2px rgba(255, 60, 90, 0.2);
+}
+
+.popup-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #ffaa55;
+  background: rgba(255, 98, 0, 0.15);
+  border: 1px solid rgba(255, 98, 0, 0.35);
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+.popup-badge.cursed {
+  color: #ff4d6d;
+  background: rgba(255, 23, 68, 0.2);
+  border-color: rgba(255, 23, 68, 0.5);
+}
+
+.popup-title {
+  font-family: var(--font-brand);
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 0;
+  color: #ffffff;
+  text-shadow: 0 0 15px rgba(255, 120, 30, 0.6);
+}
+
+.popup-title.cursed {
+  color: #ff3355;
+  text-shadow: 0 0 18px rgba(255, 30, 70, 0.8);
+}
+
+.popup-details {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 6px 0;
+}
+
+.popup-detail-row {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+}
+
+.popup-detail-row.highlight-player {
+  background: rgba(255, 98, 0, 0.08);
+  border-color: rgba(255, 98, 0, 0.25);
+}
+
+.popup-detail-row.highlight-game {
+  background: rgba(155, 93, 229, 0.1);
+  border-color: rgba(155, 93, 229, 0.3);
+}
+
+.popup-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.popup-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.popup-value.player-name {
+  color: #ffaa44;
+  font-size: 1.25rem;
+  text-shadow: 0 0 10px rgba(255, 170, 68, 0.4);
+}
+
+.popup-value.game-name {
+  color: #e0aaff;
+  font-size: 1.25rem;
+  text-shadow: 0 0 10px rgba(155, 93, 229, 0.4);
+}
+
+.cursed-challenge-box {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  background: rgba(255, 23, 68, 0.1);
+  border-color: rgba(255, 23, 68, 0.3);
+}
+
+.cursed-challenge-text {
+  font-size: 1.05rem;
+  color: #ffccd5;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.popup-accept-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ff8533 0%, #ff5500 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 25px rgba(255, 98, 0, 0.45);
+  transition: all 0.2s ease;
+  margin-top: 6px;
+}
+
+.popup-accept-btn:hover {
+  background: linear-gradient(180deg, #ffa366 0%, #ff6611 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 98, 0, 0.65);
+}
+
+.popup-accept-btn.cursed {
+  background: linear-gradient(180deg, #ff2a55 0%, #cc0022 100%);
+  box-shadow: 0 8px 25px rgba(255, 23, 68, 0.55);
+}
+
+.popup-accept-btn.cursed:hover {
+  background: linear-gradient(180deg, #ff4d73 0%, #e60029 100%);
+  box-shadow: 0 10px 32px rgba(255, 23, 68, 0.75);
+}
+
+.popup-launch-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: linear-gradient(135deg, #00e676 0%, #00b248 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 25px rgba(0, 230, 118, 0.45);
+  transition: all 0.2s ease;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.popup-launch-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1de9b6 0%, #00c853 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(0, 230, 118, 0.65);
+}
+
+.popup-launch-btn:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}

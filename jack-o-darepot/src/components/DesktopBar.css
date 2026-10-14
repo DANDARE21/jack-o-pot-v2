@@ -1,0 +1,93 @@
+.desktop-topbar {
+  width: 100%;
+  height: 38px;
+  min-height: 38px;
+  background: #09080e;
+  border-bottom: 1px solid rgba(255, 98, 0, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 0 14px;
+  font-family: var(--font-ui);
+  user-select: none;
+  -webkit-app-region: drag;
+  position: relative;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.desktop-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  -webkit-app-region: drag;
+}
+
+.desktop-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.desktop-brand-icon {
+  font-size: 1.05rem;
+  filter: drop-shadow(0 0 6px rgba(255, 98, 0, 0.6));
+}
+
+.desktop-brand-name {
+  font-family: var(--font-brand);
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #ff8533;
+}
+
+.desktop-version-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #ffa756;
+  background: rgba(255, 98, 0, 0.12);
+  border: 1px solid rgba(255, 98, 0, 0.3);
+  padding: 2px 7px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+/* Draggable space spanning between branding and window controls */
+.desktop-topbar-drag-spacer {
+  flex: 1;
+  height: 100%;
+  -webkit-app-region: drag;
+}
+
+.desktop-topbar-right {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+.window-ctrl-btn {
+  width: 44px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #a3a0b5;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.window-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.window-ctrl-btn.close-btn:hover {
+  background: #e81123;
+  color: #ffffff;
+}

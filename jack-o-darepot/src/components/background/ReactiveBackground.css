@@ -1,0 +1,38 @@
+.reactive-bg-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* Slight scale ensures bass shake translation never reveals screen edge seams */
+  transform: scale(1.04);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+#reactive-bg-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* Nearest-neighbor scaling for crisp, free GPU pixelation */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Atmospheric contrast vignette overlay */
+.reactive-bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 48%,
+    rgba(7, 7, 10, 0.40) 0%,
+    rgba(7, 7, 10, 0.75) 65%,
+    rgba(5, 5, 8, 0.95) 100%
+  );
+  pointer-events: none;
+}
