@@ -50,7 +50,7 @@ export const DEFAULT_SETTINGS = {
   highsSmoothing: 0.15, // 0.0 = instant 0-delay wave acceleration, higher = rolling momentum
   lowsBaseThreshold: 0.15, // Minimum bass energy to trigger shake (0.0 = sensitive to all bass)
   midsBaseScale: 0.25, // Resting logo size during silence (0.05 to 0.50)
-  highsBaseDrift: 0.15, // Resting shader motion drift during silence (0.0 = stops dead on silence)
+  highsBaseDrift: 1.0, // Resting shader motion loop speed during silence (1.0 = 100% fluid loop; sounds accelerate)
 
   // Retro 8-bit UI Styles & Colors
   uiThemePreset: "jack_o_flame", // Theme key or 'custom'

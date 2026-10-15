@@ -25,16 +25,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  margin-top: 6px;
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  margin-top: 14px;
+  position: relative;
+  z-index: 25; /* Always on top of machine wrapper (z-index 10) */
 }
 
 /* Retro HUD Panel */
 .arcade-hud-panel,
 .arcade-hud-bar {
-  background: rgba(17, 14, 25, 0.88);
+  background: rgba(17, 14, 25, 0.92);
   border: 2px solid var(--ui-border);
   padding: 10px 24px;
   display: flex;
@@ -44,30 +45,16 @@
   max-width: 580px;
   box-shadow: 4px 4px 0px #000000;
   backdrop-filter: blur(8px);
-  max-height: 80px;
+  position: relative;
+  z-index: 25;
+  box-sizing: border-box;
   overflow: hidden;
-  transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-              transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-              max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-              margin 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-              padding 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-              border-color 0.2s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* Smooth hiding during reel spin */
-.is-spinning-active .arcade-hud-panel,
-.arcade-hud-panel.is-hidden-spinning {
-  opacity: 0;
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  border-width: 0;
-  border-color: transparent;
-  pointer-events: none;
-  transform: translateY(18px) scale(0.95);
-  box-shadow: none;
+.is-spinning-active .arcade-hud-panel {
+  border-color: var(--ui-accent-hover);
+  box-shadow: 4px 4px 0px #000000, 0 0 16px var(--ui-accent-alpha-25);
 }
 
 .hud-stat-item {
@@ -186,6 +173,8 @@
   color: #000000;
   border: 2px solid #ffffff;
   box-shadow: 0 6px 0px #000000;
+  position: relative;
+  z-index: 26;
   transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
   user-select: none;
 }

@@ -52,6 +52,7 @@
 .navigator-viewport {
   width: 100%;
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -60,10 +61,44 @@
 .navigator-screen-wrapper {
   width: 100%;
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+/* Fullscreen Edge-to-Edge Collection Screen Layout */
+.app-main-content.screen-collection,
+.app-main-content:has(.collection-screen) {
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  height: calc(100vh - 38px);
+  max-height: calc(100vh - 38px);
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+}
+
+.is-fullscreen .app-main-content.screen-collection,
+.is-fullscreen .app-main-content:has(.collection-screen) {
+  height: 100vh;
+  max-height: 100vh;
+}
+
+.app-main-content.screen-collection .navigator-viewport,
+.app-main-content.screen-collection .navigator-screen-wrapper,
+.navigator-viewport:has(.collection-screen),
+.navigator-screen-wrapper:has(.collection-screen) {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  overflow: hidden;
 }
 
 .game-screen-container {
@@ -72,6 +107,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding-bottom: 24px;
 }
 
 .screen-fallback {

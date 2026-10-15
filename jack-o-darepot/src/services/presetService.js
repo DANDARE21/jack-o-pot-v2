@@ -34,7 +34,7 @@ export const BUILT_IN_PRESETS = [
       highsSmoothing: 0.15,
       lowsBaseThreshold: 0.15,
       midsBaseScale: 0.25,
-      highsBaseDrift: 0.15,
+      highsBaseDrift: 1.0,
     },
   },
   {
@@ -70,7 +70,7 @@ export const BUILT_IN_PRESETS = [
       highsSmoothing: 0.1,
       lowsBaseThreshold: 0.05,
       midsBaseScale: 0.28,
-      highsBaseDrift: 0.15,
+      highsBaseDrift: 1.15,
     },
   },
   {
@@ -99,7 +99,7 @@ export const BUILT_IN_PRESETS = [
       highsSmoothing: 0.0,
       lowsBaseThreshold: 0.05,
       midsBaseScale: 0.22,
-      highsBaseDrift: 0.05,
+      highsBaseDrift: 1.0,
     },
   },
   {
@@ -128,7 +128,7 @@ export const BUILT_IN_PRESETS = [
       highsSmoothing: 0.12,
       lowsBaseThreshold: 0.10,
       midsBaseScale: 0.25,
-      highsBaseDrift: 0.12,
+      highsBaseDrift: 0.9,
     },
   },
   {
@@ -157,7 +157,7 @@ export const BUILT_IN_PRESETS = [
       highsSmoothing: 0.20,
       lowsBaseThreshold: 0.20,
       midsBaseScale: 0.30,
-      highsBaseDrift: 0.20,
+      highsBaseDrift: 0.85,
     },
   },
   {
@@ -186,7 +186,7 @@ export const BUILT_IN_PRESETS = [
       highsSmoothing: 0.15,
       lowsBaseThreshold: 0.15,
       midsBaseScale: 0.25,
-      highsBaseDrift: 0.15,
+      highsBaseDrift: 1.05,
     },
   },
   {
@@ -215,7 +215,7 @@ export const BUILT_IN_PRESETS = [
       highsSmoothing: 0.12,
       lowsBaseThreshold: 0.12,
       midsBaseScale: 0.25,
-      highsBaseDrift: 0.18,
+      highsBaseDrift: 1.2,
     },
   },
   {
@@ -244,7 +244,7 @@ export const BUILT_IN_PRESETS = [
       highsSmoothing: 0.2,
       lowsBaseThreshold: 0.2,
       midsBaseScale: 0.28,
-      highsBaseDrift: 0.15,
+      highsBaseDrift: 0.8,
     },
   },
 ];

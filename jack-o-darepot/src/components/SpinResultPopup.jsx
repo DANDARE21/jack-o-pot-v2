@@ -11,6 +11,7 @@ export default function SpinResultPopup({
   player,
   category,
   game,
+  gameImage,
   challengeName,
   challengeText,
   executablePath,
@@ -22,7 +23,14 @@ export default function SpinResultPopup({
   const { launchGame, showNotification } = useElectron();
   const { navigate } = useNavigation();
   const [isLaunching, setIsLaunching] = useState(false);
-  const [resolvedStatus, setResolvedStatus] = useState(null);
+  const [resolvedStatus, setResolvedStatus] = useState(null); // "accepted" | "denied"
+
+  const fixAssetPath = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    if (path.startsWith("/")) return path;
+    return `/assets/${path}`;
+  };
 
   const handleLaunchNow = async () => {
     if (!executablePath) return;
@@ -38,12 +46,22 @@ export default function SpinResultPopup({
     }
   };
 
-  const handleResolveOutcome = (won) => {
-    onResolveDare?.(won);
-    setResolvedStatus(won ? "won" : "lost");
+  const handleAcceptDare = () => {
+    if (resolvedStatus) return;
+    setResolvedStatus("accepted");
+    onResolveDare?.(true);
     setTimeout(() => {
       onClose();
-    }, 700);
+    }, 900);
+  };
+
+  const handleDenyDare = () => {
+    if (resolvedStatus) return;
+    setResolvedStatus("denied");
+    onResolveDare?.(false);
+    setTimeout(() => {
+      onClose();
+    }, 900);
   };
 
   const handleGoToLeaderboard = () => {
@@ -51,151 +69,243 @@ export default function SpinResultPopup({
     navigate(SCREENS.LEADERBOARD);
   };
 
+  const ptsValue = isCursed ? 100 : 50;
+
   return (
     <AnimatePresence>
       <div className="popup-overlay" onClick={onClose}>
         <motion.div
           className={`popup-card ${isCursed ? "cursed" : ""}`}
           onClick={(e) => e.stopPropagation()}
-          initial={{ opacity: 0, scale: 0.85, y: 20 }}
+          initial={{ opacity: 0, scale: 0.88, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.85, y: 20 }}
-          transition={{ type: "spring", damping: 25, stiffness: 350 }}
+          exit={{ opacity: 0, scale: 0.88, y: 30 }}
+          transition={{ type: "spring", damping: 26, stiffness: 340 }}
         >
-          {/* Top Banner Tag */}
-          <div className={`popup-badge ${isCursed ? "cursed" : ""}`}>
-            {isCursed ? (
-              <span className="flex items-center justify-center gap-1">
-                <Icon icon="game-icons:skull-crossed-bones" className="text-ui-cursed text-sm" />
-                <span>CURSED DARE</span>
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-1">
-                <Icon icon="game-icons:jack-o-lantern" className="text-ui-accent text-sm" />
-                <span>DARE DECIDED</span>
-              </span>
-            )}
-          </div>
+          {/* Close button in top-right */}
+          <button
+            type="button"
+            className="popup-close-x-btn"
+            onClick={onClose}
+            title="Close Popup (Esc)"
+          >
+            <Icon icon="game-icons:cross-mark" />
+          </button>
 
-          <h2 className={`popup-title ${isCursed ? "cursed" : ""}`}>
-            {isCursed ? "THE MACHINE HAS CHOSEN" : "THE WHEEL OF FATE HAS SPOKEN"}
-          </h2>
-
-          <div className="popup-details">
-            <div className="popup-detail-row highlight-player">
-              <span className="popup-label flex items-center gap-1">
-                <Icon icon="game-icons:hood" className="text-ui-accent text-sm" />
-                <span>{isCursed ? "Victim" : "Player"}</span>
-              </span>
-              <span className="popup-value player-name">{player || "Unknown"}</span>
-            </div>
-
-            {!isCursed ? (
-              <>
-                <div className="popup-detail-row">
-                  <span className="popup-label flex items-center gap-1">
-                    <Icon icon="game-icons:price-tag" className="text-ui-accent text-sm" />
-                    <span>Category</span>
-                  </span>
-                  <span className="popup-value">{category || "General"}</span>
-                </div>
-                <div className="popup-detail-row highlight-game">
-                  <span className="popup-label flex items-center gap-1">
-                    <Icon icon="game-icons:retro-controller" className="text-ui-accent text-sm" />
-                    <span>Selected Game</span>
-                  </span>
-                  <span className="popup-value game-name">{game || "Mystery Title"}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="popup-detail-row highlight-game">
-                  <span className="popup-label flex items-center gap-1">
-                    <Icon icon="game-icons:retro-controller" className="text-ui-accent text-sm" />
-                    <span>Game</span>
-                  </span>
-                  <span className="popup-value game-name">{game || "Cursed Game"}</span>
-                </div>
-                <div className="popup-detail-row cursed-challenge-box">
-                  <span className="popup-label flex items-center gap-1">
-                    <Icon icon="game-icons:lightning-trio" className="text-ui-cursed text-sm" />
-                    <span>Dare: {challengeName}</span>
-                  </span>
-                  <p className="cursed-challenge-text">{challengeText}</p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {resolvedStatus && (
-            <div className={`popup-resolved-banner ${resolvedStatus}`}>
-              {resolvedStatus === "won" ? (
-                <span>👑 DARE CONQUERED! Recorded on Leaderboard!</span>
+          {/* Top Marquee Header Bar */}
+          <div className={`popup-marquee-bar ${isCursed ? "cursed" : ""}`}>
+            <span className="marquee-dot" />
+            <div className="popup-marquee-content">
+              {isCursed ? (
+                <span className="flex items-center gap-1.5">
+                  <Icon icon="game-icons:skull-crossed-bones" className="text-ui-cursed text-base animate-pulse" />
+                  <span>DEMONIC PROTOCOL ACTIVE • CURSED DARE ISSUED</span>
+                  <Icon icon="game-icons:skull-crossed-bones" className="text-ui-cursed text-base animate-pulse" />
+                </span>
               ) : (
-                <span>💀 DARE FAILED! Recorded on Leaderboard!</span>
+                <span className="flex items-center gap-1.5">
+                  <Icon icon="game-icons:sparkles" className="text-ui-accent text-base" />
+                  <span>THE WHEEL OF FATE HAS SPOKEN • DARE DECIDED</span>
+                  <Icon icon="game-icons:sparkles" className="text-ui-accent text-base" />
+                </span>
               )}
             </div>
-          )}
+            <span className="marquee-dot" />
+          </div>
 
+          {/* Grand Title */}
+          <div className="popup-header-block">
+            <h2 className={`popup-grand-title ${isCursed ? "cursed" : ""}`}>
+              {isCursed ? "THE MACHINE HAS CHOSEN ITS VICTIM" : "A NEW CHALLENGE HAS BEEN CHOSEN!"}
+            </h2>
+            <p className="popup-subtitle">
+              {isCursed
+                ? "Darkness looms over the machine. Will you accept your doom?"
+                : "The reels have locked in. Accept the challenge to claim glory on the leaderboard!"}
+            </p>
+          </div>
+
+          {/* Visual Showcase Stage (Cards Grid) */}
+          <div className="popup-visual-stage">
+            {/* Player / Victim Card */}
+            <div className={`popup-hero-card player-hero-card ${isCursed ? "cursed" : ""}`}>
+              <div className="hero-card-tag">
+                <Icon
+                  icon={isCursed ? "game-icons:bleeding-eye" : "game-icons:hood"}
+                  className="text-sm"
+                />
+                <span>{isCursed ? "VICTIM" : "CHALLENGER"}</span>
+              </div>
+
+              <div className="player-avatar-circle">
+                <Icon
+                  icon={isCursed ? "game-icons:skull-mask" : "game-icons:ninja-mask"}
+                  className="player-avatar-icon"
+                />
+              </div>
+
+              <div className="player-info-meta">
+                <span className="player-title-label">PLAYER</span>
+                <span className="player-name-display">{player || "Unknown"}</span>
+              </div>
+
+              <div className="points-bounty-badge">
+                <Icon icon="game-icons:trophy" className="text-sm" />
+                <span>WORTH +{ptsValue} PTS</span>
+              </div>
+            </div>
+
+            {/* Game / Dare Mission Card */}
+            <div className={`popup-hero-card game-hero-card ${isCursed ? "cursed" : ""}`}>
+              <div className="hero-card-tag">
+                <Icon
+                  icon={isCursed ? "game-icons:lightning-trio" : "game-icons:retro-controller"}
+                  className="text-sm"
+                />
+                <span>{isCursed ? "CURSED MISSION" : "TARGET GAME"}</span>
+              </div>
+
+              {!isCursed ? (
+                <>
+                  <div className="game-preview-container">
+                    {gameImage ? (
+                      <img
+                        src={fixAssetPath(gameImage)}
+                        alt={game}
+                        className="game-cover-art"
+                      />
+                    ) : (
+                      <div className="game-icon-fallback">
+                        <Icon icon="game-icons:retro-controller" className="fallback-game-icon" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="game-info-meta">
+                    <span className="category-pill-badge">
+                      <Icon icon="game-icons:price-tag" className="text-xs" />
+                      <span>{category || "GENERAL"}</span>
+                    </span>
+                    <span className="game-title-display">{game || "Mystery Title"}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="cursed-mission-content">
+                  <div className="cursed-target-game">
+                    <span className="cursed-game-label">GAME TARGET:</span>
+                    <span className="cursed-game-name">{game || "Cursed Game"}</span>
+                  </div>
+
+                  <div className="cursed-dare-banner">
+                    <div className="cursed-dare-header">
+                      <Icon icon="game-icons:skull-crossed-bones" className="text-base" />
+                      <span>DARE: {challengeName || "MYSTERY CURSE"}</span>
+                    </div>
+                    <p className="cursed-dare-description">{challengeText || "No description provided."}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Optional Launch Executable Bar */}
           {executablePath && (
             <button
-              className="popup-launch-btn flex items-center justify-center gap-2"
+              type="button"
+              className="popup-launch-action-bar"
               onClick={handleLaunchNow}
               disabled={isLaunching}
             >
-              {isLaunching ? (
-                <>
-                  <Icon icon="game-icons:anticlockwise-rotation" className="animate-spin text-lg" />
-                  <span>Launching Game...</span>
-                </>
-              ) : (
-                <>
-                  <Icon icon="game-icons:rocket" className="text-lg" />
-                  <span>Launch Game Now</span>
-                </>
-              )}
+              <span className="launch-icon-box">
+                {isLaunching ? (
+                  <Icon icon="game-icons:anticlockwise-rotation" className="animate-spin text-xl" />
+                ) : (
+                  <Icon icon="game-icons:rocket" className="text-xl" />
+                )}
+              </span>
+              <span className="launch-text-box">
+                <span className="launch-main-text">
+                  {isLaunching ? "LAUNCHING GAME EXECUTABLE..." : `LAUNCH ${game?.toUpperCase()} NOW`}
+                </span>
+                <span className="launch-sub-text">Starts executable directly via desktop bridge</span>
+              </span>
             </button>
           )}
 
-          {/* Quick Dare Outcome Logger for Leaderboard */}
-          <div className="popup-dare-actions">
-            <button
-              type="button"
-              className="popup-outcome-btn win-action"
-              onClick={() => handleResolveOutcome(true)}
-              title="Record win & award points on leaderboard"
+          {/* Resolution Outcome Banner */}
+          {resolvedStatus && (
+            <motion.div
+              className={`popup-resolution-banner ${resolvedStatus}`}
+              initial={{ opacity: 0, scale: 0.9, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              <Icon icon="game-icons:trophy" className="text-base" />
-              <span>Conquered (+{isCursed ? "100" : "50"} Pts)</span>
-            </button>
-            <button
+              {resolvedStatus === "accepted" ? (
+                <>
+                  <Icon icon="game-icons:trophy" className="text-xl animate-bounce" />
+                  <span>DARE ACCEPTED! +{ptsValue} POINTS AWARDED ON LEADERBOARD!</span>
+                </>
+              ) : (
+                <>
+                  <Icon icon="game-icons:chicken" className="text-xl animate-bounce" />
+                  <span>DARE DENIED! NO POINTS AWARDED (RECORDED AS FAILED)!</span>
+                </>
+              )}
+            </motion.div>
+          )}
+
+          {/* TWO HERO OPTIONS: Accept Dare & Deny Dare */}
+          <div className="popup-two-options-grid">
+            {/* OPTION 1: ACCEPT DARE */}
+            <motion.button
               type="button"
-              className="popup-outcome-btn lose-action"
-              onClick={() => handleResolveOutcome(false)}
-              title="Record failure on leaderboard"
+              className={`popup-hero-option-btn accept-btn ${isCursed ? "cursed" : ""}`}
+              onClick={handleAcceptDare}
+              disabled={Boolean(resolvedStatus)}
+              whileHover={!resolvedStatus ? { scale: 1.03 } : {}}
+              whileTap={!resolvedStatus ? { scale: 0.97 } : {}}
+              autoFocus
             >
-              <Icon icon="game-icons:skull-crossed-bones" className="text-base" />
-              <span>Failed</span>
-            </button>
+              <div className="option-btn-icon-wrapper">
+                <Icon icon="game-icons:muscle-up" className="option-icon" />
+              </div>
+              <div className="option-btn-text-content">
+                <span className="option-title">ACCEPT DARE</span>
+                <span className="option-subtitle">CLAIM +{ptsValue} PTS</span>
+              </div>
+            </motion.button>
+
+            {/* OPTION 2: DENY DARE */}
+            <motion.button
+              type="button"
+              className="popup-hero-option-btn deny-btn"
+              onClick={handleDenyDare}
+              disabled={Boolean(resolvedStatus)}
+              whileHover={!resolvedStatus ? { scale: 1.03 } : {}}
+              whileTap={!resolvedStatus ? { scale: 0.97 } : {}}
+            >
+              <div className="option-btn-icon-wrapper">
+                <Icon icon="game-icons:chicken" className="option-icon" />
+              </div>
+              <div className="option-btn-text-content">
+                <span className="option-title">DENY DARE</span>
+                <span className="option-subtitle">FORFEIT • 0 PTS</span>
+              </div>
+            </motion.button>
           </div>
 
-          <div className="popup-footer-row">
+          {/* Footer Sub-Bar */}
+          <div className="popup-footer-bar">
             <button
               type="button"
-              className="popup-leaderboard-link"
+              className="popup-leaderboard-shortcut"
               onClick={handleGoToLeaderboard}
             >
               <Icon icon="game-icons:podium" className="text-base" />
-              <span>View Leaderboard</span>
+              <span>Leaderboard Standings</span>
             </button>
 
-            <button
-              className={`popup-accept-btn ${isCursed ? "cursed" : ""}`}
-              onClick={onClose}
-              autoFocus
-            >
-              {isCursed ? "ACCEPT FATE" : "ACCEPT DARE"}
-            </button>
+            <span className="popup-keyboard-hint">Press ESC to dismiss</span>
           </div>
         </motion.div>
       </div>

@@ -185,7 +185,7 @@ export default function SettingsScreen() {
       highsSmoothing: settings.highsSmoothing ?? 0.15,
       lowsBaseThreshold: settings.lowsBaseThreshold ?? 0.15,
       midsBaseScale: settings.midsBaseScale ?? 0.25,
-      highsBaseDrift: settings.highsBaseDrift ?? 0.15,
+      highsBaseDrift: settings.highsBaseDrift ?? 1.0,
       uiThemePreset: settings.uiThemePreset || "jack_o_flame",
       uiSyncWithBackground: settings.uiSyncWithBackground !== false,
       uiAccentColor: settings.uiAccentColor || "#ff6200",
@@ -1327,14 +1327,20 @@ export default function SettingsScreen() {
               </SettingRow>
 
               <SettingRow
-                title="Highs Base Idle Drift"
-                description="Resting shader motion speed when no highs are playing (0% = freezes completely on silence)"
+                title="Shader Idle Loop Speed"
+                description="Continuous ambient animation speed when silent (audio frequencies accelerate and accentuate on top)"
               >
                 <SettingSlider
-                  value={Math.round((settings.highsBaseDrift ?? 0.15) * 100)}
-                  min={0}
-                  max={50}
-                  step={5}
+                  value={Math.round(
+                    (settings.highsBaseDrift !== undefined
+                      ? (settings.highsBaseDrift <= 0.35 && settings.highsBaseDrift > 0
+                          ? 0.65 + settings.highsBaseDrift * 2.5
+                          : settings.highsBaseDrift)
+                      : 1.0) * 100
+                  )}
+                  min={10}
+                  max={250}
+                  step={10}
                   unit="%"
                   disabled={settings.reactiveBackground === false}
                   onChange={(val) => updateSetting("highsBaseDrift", val / 100)}

@@ -90,6 +90,13 @@ export function useElectron() {
     return false;
   };
 
+  const searchGameDatabase = async (query, options = {}) => {
+    if (electron?.searchGameDatabase) {
+      return await electron.searchGameDatabase(query, options);
+    }
+    return null;
+  };
+
   return {
     isElectron,
     electron,
@@ -109,5 +116,6 @@ export function useElectron() {
     selectExecutable,
     launchGame,
     openGameFolder,
+    searchGameDatabase,
   };
 }

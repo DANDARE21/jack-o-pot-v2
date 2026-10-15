@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import SlotMachine from "./SlotMachine";
 import CursedSlotMachine from "./CursedSlotMachine";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import CursedText from "./CursedText";
 import SpinResultPopup from "./SpinResultPopup";
 import { useElectron } from "../hooks/useElectron";
@@ -135,6 +135,7 @@ export default function SlotMachineHandler({
         console.log("[Handler] cursed spin normalized result:", result);
 
         const playerName = nameOf(result?.player ?? result?.playerName ?? result?.name, "player");
+        const gameName = nameOf(result?.game ?? result?.gameName ?? result?.game?.name, "game");
         const challengeName = nameOf(result?.challenge ?? result?.challengeName ?? result?.challenge?.name, "challengeName");
         const challengeText =
           (typeof result?.challenge === "object" && result.challenge?.text) ||
@@ -142,7 +143,7 @@ export default function SlotMachineHandler({
           result?.text ||
           "No description";
 
-        console.log("[Handler] cursed resolved ->", { playerName, challengeName, challengeText });
+        console.log("[Handler] cursed resolved ->", { playerName, gameName, challengeName, challengeText });
 
         if (settings.desktopNotifications) {
           showNotification({
@@ -154,9 +155,15 @@ export default function SlotMachineHandler({
         // Record player spin on leaderboard
         game.recordPlayerSpin?.(playerName);
 
+        const gameObj = typeof result?.game === "object" ? result.game : null;
+
         setPopupData({
           type: "cursed",
           player: playerName,
+          game: gameName,
+          gameImage: gameObj?.image,
+          executablePath: gameObj?.executablePath,
+          launchArgs: gameObj?.launchArgs,
           challengeName,
           challengeText,
           onResolveDare: (won) => {
@@ -263,6 +270,7 @@ export default function SlotMachineHandler({
           player: playerName,
           category: categoryName,
           game: gameName,
+          gameImage: gameObj?.image,
           executablePath: gameObj?.executablePath,
           launchArgs: gameObj?.launchArgs,
           onResolveDare: (won) => {
@@ -283,6 +291,12 @@ export default function SlotMachineHandler({
     }
   };
 
+  const spinExpansionScale = settings.spinExpansionScale ?? 1.13;
+  // When spinning, the stats bar hides. Calculate clearance so the spin button positions cleanly below the enlarged cabinet
+  const controlsOffsetY = spinning
+    ? Math.round((spinExpansionScale - 1) * 160 + 24)
+    : 0;
+
   return (
     <div className="handler-container">
       {/* Cursed overlay */}
@@ -293,7 +307,7 @@ export default function SlotMachineHandler({
         className={`handler-machine-wrapper ${spinning ? "is-machine-spinning" : ""}`}
         animate={
           spinning
-            ? { scale: settings.spinExpansionScale ?? 1.13, x: [-2, 2, -2, 2, 0] }
+            ? { scale: spinExpansionScale, x: [-2, 2, -2, 2, 0] }
             : { scale: 1, x: 0 }
         }
         transition={{
@@ -331,32 +345,47 @@ export default function SlotMachineHandler({
       </motion.div>
 
       {/* Arcade Dashboard & HUD */}
-      <div className="handler-controls-area">
-        <div className={`arcade-hud-panel ${spinning ? "is-hidden-spinning" : ""}`}>
-          <div className="hud-stat-item">
-            <span className="hud-stat-label">TOTAL SPINS</span>
-            <span className="hud-stat-value flex items-center gap-1.5">
-              <Icon icon="game-icons:anticlockwise-rotation" className="text-ui-accent text-base" />
-              <span>{spinCount}</span>
-            </span>
-          </div>
-          <div className="hud-divider" />
-          <div className="hud-stat-item">
-            <span className="hud-stat-label">LOADED PLAYERS</span>
-            <span className="hud-stat-value flex items-center gap-1.5">
-              <Icon icon="game-icons:crowd" className="text-ui-accent text-base" />
-              <span>{players.length}</span>
-            </span>
-          </div>
-          <div className="hud-divider" />
-          <div className="hud-stat-item">
-            <span className="hud-stat-label">MACHINE STATUS</span>
-            <span className={`hud-status-badge ${spinning ? "status-spinning" : isCursedMode ? "status-cursed" : "status-ready"}`}>
-              <span className="status-indicator-dot" />
-              <span>{spinning ? "SPINNING" : isCursedMode ? "CURSED" : "READY"}</span>
-            </span>
-          </div>
-        </div>
+      <motion.div
+        className="handler-controls-area"
+        animate={{ y: controlsOffsetY }}
+        transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+      >
+        <AnimatePresence initial={false}>
+          {!spinning && (
+            <motion.div
+              key="arcade-hud-panel"
+              className="arcade-hud-panel"
+              initial={{ opacity: 0, height: 0, scale: 0.95, paddingTop: 0, paddingBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", scale: 1, paddingTop: 10, paddingBottom: 10 }}
+              exit={{ opacity: 0, height: 0, scale: 0.95, paddingTop: 0, paddingBottom: 0 }}
+              transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+            >
+              <div className="hud-stat-item">
+                <span className="hud-stat-label">TOTAL SPINS</span>
+                <span className="hud-stat-value flex items-center gap-1.5">
+                  <Icon icon="game-icons:anticlockwise-rotation" className="text-ui-accent text-base" />
+                  <span>{spinCount}</span>
+                </span>
+              </div>
+              <div className="hud-divider" />
+              <div className="hud-stat-item">
+                <span className="hud-stat-label">LOADED PLAYERS</span>
+                <span className="hud-stat-value flex items-center gap-1.5">
+                  <Icon icon="game-icons:crowd" className="text-ui-accent text-base" />
+                  <span>{players.length}</span>
+                </span>
+              </div>
+              <div className="hud-divider" />
+              <div className="hud-stat-item">
+                <span className="hud-stat-label">MACHINE STATUS</span>
+                <span className={`hud-status-badge ${isCursedMode ? "status-cursed" : "status-ready"}`}>
+                  <span className="status-indicator-dot" />
+                  <span>{isCursedMode ? "CURSED" : "READY"}</span>
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Big Juicy Arcade Spin Button */}
         <motion.button
@@ -385,7 +414,7 @@ export default function SlotMachineHandler({
               : "SPIN THE DAREPOT"}
           </span>
         </motion.button>
-      </div>
+      </motion.div>
 
       {/* Popup */}
       {popupData && <SpinResultPopup {...popupData} />}

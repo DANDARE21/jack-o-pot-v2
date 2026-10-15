@@ -157,8 +157,13 @@ export default function ReactiveBackground() {
         s.lowsBaseThreshold !== undefined ? s.lowsBaseThreshold : 0.15;
       const midsBaseScale =
         s.midsBaseScale !== undefined ? s.midsBaseScale : 0.25;
-      const highsBaseDrift =
-        s.highsBaseDrift !== undefined ? s.highsBaseDrift : 0.15;
+      // Idle loop drift: baseline animation rate when silent
+      let effectiveBaseDrift =
+        s.highsBaseDrift !== undefined ? s.highsBaseDrift : 1.0;
+      // Upgrade legacy default (0.15) or low legacy presets to lively fluid baseline speed
+      if (effectiveBaseDrift <= 0.35 && effectiveBaseDrift > 0.0) {
+        effectiveBaseDrift = 0.65 + effectiveBaseDrift * 2.5;
+      }
 
       // Extract real-time frequency bands with per-channel smoothing and pre-amp gain
       const { lows, mids, highs, lowsPeak, midsPeak, highsPeak } =
@@ -261,12 +266,15 @@ export default function ReactiveBackground() {
       logoOffsetRef.current.y =
         (logoOffsetRef.current.y + dt * midsSpeedRate * 0.22 * 0.75) % 1000.0;
 
-      // 3. HIGHS: Procedural Background Movement Rate
+      // 3. HIGHS & PROCEDURAL BACKGROUND: Ambient Continuous Loop & Audio Acceleration
+      // Plays continuous animation on loop even without music; sound accelerates & accentuates it
       const rawHighs =
         highsSmoothing <= 0.01 ? highs : Math.max(highs, highsPeak || 0);
-      const incrementalHighs = Math.pow(rawHighs, 1.9);
-      const highsDrive = incrementalHighs * 8.5 * highsMovementSpeed;
-      const movementRate = (highsBaseDrift + highsDrive) * speed;
+      const incrementalHighs = Math.pow(rawHighs, 1.8);
+      const highsDrive =
+        (incrementalHighs * 6.5 * highsMovementSpeed +
+          Math.pow(rawMids, 2.0) * 1.5 * midsLogoScale);
+      const movementRate = (effectiveBaseDrift + highsDrive) * speed;
       accumMovementRef.current += dt * movementRate;
 
       // Determine palette: shift to cursed blood only during active cursed round

@@ -360,3 +360,271 @@ ipcMain.handle('game:open-folder', async (event, executablePath) => {
   return false;
 });
 
+// ============================================================================
+// GAME DATABASE SCRAPER: STEAM -> IGDB -> OPEN GAME DATABASE (Multi-tier)
+// ============================================================================
+
+const WIKI_USER_AGENT = 'JackOPotVault/2.0 (retro gaming app; contact: support@jackopot.app)';
+
+// 1. Steam Store DB Search
+async function querySteamDatabase(cleanQuery) {
+  try {
+    const searchRes = await fetch(
+      `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(cleanQuery)}&l=english&cc=US`
+    );
+    if (!searchRes.ok) return [];
+    const searchData = await searchRes.json();
+    const items = (searchData.items || []).slice(0, 6);
+    if (items.length === 0) return [];
+
+    const detailedResults = await Promise.all(
+      items.map(async (item) => {
+        try {
+          const detailsRes = await fetch(
+            `https://store.steampowered.com/api/appdetails?appids=${item.id}&l=english`
+          );
+          const detailsJson = await detailsRes.json();
+          const appData = detailsJson[item.id]?.data || {};
+
+          const verticalArtwork = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900_2x.jpg`;
+          const horizontalArtwork = appData.header_image || appData.capsule_image || item.tiny_image || '';
+          const screenshots = (appData.screenshots || [])
+            .slice(0, 6)
+            .map((s) => s.path_full || s.path_thumbnail);
+          const background = appData.background_raw || appData.background || '';
+
+          return {
+            id: `steam_${item.id}`,
+            name: item.name || appData.name || '',
+            verticalArtwork,
+            horizontalArtwork,
+            screenshots,
+            background,
+            description: appData.short_description || '',
+            releaseDate: appData.release_date?.date || '',
+            genres: (appData.genres || []).map((g) => g.description),
+            source: 'STEAM',
+          };
+        } catch {
+          return {
+            id: `steam_${item.id}`,
+            name: item.name,
+            verticalArtwork: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${item.id}/library_600x900_2x.jpg`,
+            horizontalArtwork: item.tiny_image || '',
+            screenshots: [],
+            background: '',
+            description: '',
+            releaseDate: '',
+            genres: [],
+            source: 'STEAM',
+          };
+        }
+      })
+    );
+
+    return detailedResults;
+  } catch (err) {
+    console.warn('Steam search failed:', err.message);
+    return [];
+  }
+}
+
+// 2. IGDB (Internet Game Database via Twitch OAuth)
+async function queryIGDBDatabase(cleanQuery, clientId, clientSecret, accessToken = null) {
+  if (!clientId || (!clientSecret && !accessToken)) return [];
+  try {
+    let token = accessToken;
+    if (!token && clientSecret) {
+      const tokenRes = await fetch(
+        `https://id.twitch.tv/oauth2/token?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&grant_type=client_credentials`,
+        { method: 'POST' }
+      );
+      if (tokenRes.ok) {
+        const tokenJson = await tokenRes.json();
+        token = tokenJson.access_token;
+      }
+    }
+    if (!token) return [];
+
+    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': clientId,
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
+      body: `search "${cleanQuery.replace(/"/g, '')}"; fields name, summary, cover.image_id, screenshots.image_id, artworks.image_id, genres.name, first_release_date; limit 6;`,
+    });
+
+    if (!igdbRes.ok) return [];
+    const games = await igdbRes.json();
+    if (!Array.isArray(games) || games.length === 0) return [];
+
+    return games.map((g) => {
+      const coverUrl = g.cover?.image_id
+        ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${g.cover.image_id}.jpg`
+        : '';
+      const bannerUrl = g.artworks?.[0]?.image_id
+        ? `https://images.igdb.com/igdb/image/upload/t_1080p/${g.artworks[0].image_id}.jpg`
+        : g.screenshots?.[0]?.image_id
+        ? `https://images.igdb.com/igdb/image/upload/t_1080p/${g.screenshots[0].image_id}.jpg`
+        : coverUrl;
+
+      const screenshots = (g.screenshots || []).map(
+        (s) => `https://images.igdb.com/igdb/image/upload/t_1080p/${s.image_id}.jpg`
+      );
+
+      return {
+        id: `igdb_${g.id}`,
+        name: g.name,
+        verticalArtwork: coverUrl,
+        horizontalArtwork: bannerUrl,
+        screenshots,
+        description: g.summary || '',
+        releaseDate: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear().toString() : '',
+        genres: (g.genres || []).map((genre) => genre.name),
+        source: 'IGDB',
+      };
+    });
+  } catch (err) {
+    console.warn('IGDB search failed:', err.message);
+    return [];
+  }
+}
+
+// 3. Open Video Game Database (Wikipedia / Wikimedia Video Game REST Archive)
+async function queryOpenGameDatabase(cleanQuery) {
+  try {
+    // A. Use opensearch to find exact matching video game titles (following redirects)
+    const openUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=8&search=${encodeURIComponent(cleanQuery)}`;
+    const openRes = await fetch(openUrl, { headers: { 'User-Agent': WIKI_USER_AGENT } });
+    const [q, titles] = await openRes.json();
+
+    let candidateTitles = (titles || []).filter(
+      (t) => !/film|album|song|soundtrack|novel|disease|virus|bacteria|syndrome|biology/i.test(t)
+    );
+    if (candidateTitles.length === 0 && titles?.length > 0) candidateTitles = titles;
+
+    candidateTitles.sort((a, b) => {
+      const aIsGame = /video game/i.test(a);
+      const bIsGame = /video game/i.test(b);
+      if (aIsGame && !bIsGame) return -1;
+      if (!aIsGame && bIsGame) return 1;
+      return 0;
+    });
+
+    // If opensearch found nothing, fallback to video game generator search
+    if (candidateTitles.length === 0) {
+      const genUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${encodeURIComponent(cleanQuery + ' video game')}&gsrlimit=4`;
+      const genRes = await fetch(genUrl, { headers: { 'User-Agent': WIKI_USER_AGENT } });
+      const genData = await genRes.json();
+      candidateTitles = Object.values(genData.query?.pages || {}).map((p) => p.title);
+    }
+
+    if (candidateTitles.length === 0) return [];
+
+    const results = [];
+    for (const title of candidateTitles.slice(0, 4)) {
+      try {
+        const detailUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&titles=${encodeURIComponent(title)}&prop=pageimages|extracts|images&piprop=original|thumbnail&pithumbsize=800&pilicense=any&exintro=1&explaintext=1`;
+        const detailRes = await fetch(detailUrl, { headers: { 'User-Agent': WIKI_USER_AGENT } });
+        const detailData = await detailRes.json();
+        const page = Object.values(detailData.query?.pages || {})[0];
+        if (!page || page.missing) continue;
+
+        const cover = page.thumbnail?.source || page.original?.source || '';
+        const desc = page.extract || '';
+
+        // Extract gameplay screenshots from article images
+        let screenshots = [];
+        if (page.images && page.images.length > 0) {
+          const imgCandidates = page.images
+            .map((i) => i.title)
+            .filter((t) => /\.(jpe?g|png|webp)$/i.test(t) && !/flag|logo|icon|symbol|commons|ambox|wiki|stub/i.test(t));
+
+          if (imgCandidates.length > 0) {
+            const imgQuery = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&titles=${encodeURIComponent(imgCandidates.slice(0, 4).join('|'))}&prop=imageinfo&iiprop=url`;
+            const imgRes = await fetch(imgQuery, { headers: { 'User-Agent': WIKI_USER_AGENT } });
+            const imgJson = await imgRes.json();
+            const imgPages = Object.values(imgJson.query?.pages || {});
+            screenshots = imgPages.map((ip) => ip.imageinfo?.[0]?.url).filter(Boolean);
+          }
+        }
+
+        results.push({
+          id: `open_${page.pageid}`,
+          name: page.title.replace(/ \(video game.*?\)/i, ''),
+          verticalArtwork: cover,
+          horizontalArtwork: screenshots[0] || cover,
+          screenshots,
+          background: screenshots[1] || cover,
+          description: desc.slice(0, 320),
+          releaseDate: '',
+          genres: [],
+          source: 'OPEN_DB',
+        });
+      } catch (itemErr) {
+        console.warn('Failed to parse Open DB item:', title, itemErr);
+      }
+    }
+
+    return results;
+  } catch (err) {
+    console.warn('Open Game Database search failed:', err.message);
+    return [];
+  }
+}
+
+// Unified Database Search Handler with Multi-tier Fallback
+ipcMain.handle('game:search-database', async (event, query, options = {}) => {
+  if (!query || typeof query !== 'string' || query.trim().length === 0) {
+    return { success: false, results: [] };
+  }
+
+  const cleanQuery = query.trim();
+  const { forceProvider, igdbClientId, igdbClientSecret, igdbAccessToken } = options;
+
+  try {
+    // Case A: User explicitly requested IGDB
+    if (forceProvider === 'igdb') {
+      const igdbResults = await queryIGDBDatabase(cleanQuery, igdbClientId, igdbClientSecret, igdbAccessToken);
+      if (igdbResults.length > 0) {
+        return { success: true, results: igdbResults, provider: 'IGDB' };
+      }
+    }
+
+    // Case B: User explicitly requested Open Game DB
+    if (forceProvider === 'open') {
+      const openResults = await queryOpenGameDatabase(cleanQuery);
+      return { success: true, results: openResults, provider: 'OPEN_DB' };
+    }
+
+    // Default Multi-Tier Automatic Waterfall:
+    // 1. Try Steam Store First
+    let results = await querySteamDatabase(cleanQuery);
+    if (results.length > 0) {
+      return { success: true, results, provider: 'STEAM' };
+    }
+
+    // 2. If Steam has 0 matches, check IGDB if credentials exist
+    if (igdbClientId && (igdbClientSecret || igdbAccessToken)) {
+      results = await queryIGDBDatabase(cleanQuery, igdbClientId, igdbClientSecret, igdbAccessToken);
+      if (results.length > 0) {
+        return { success: true, results, provider: 'IGDB' };
+      }
+    }
+
+    // 3. Fallback to Open Video Game Database (no keys required, covers console & retro games)
+    results = await queryOpenGameDatabase(cleanQuery);
+    return {
+      success: true,
+      results,
+      provider: results.length > 0 ? 'OPEN_DB' : 'NONE',
+    };
+  } catch (err) {
+    console.error('Unified game database search failed:', err);
+    return { success: false, error: err.message, results: [] };
+  }
+});
+
+

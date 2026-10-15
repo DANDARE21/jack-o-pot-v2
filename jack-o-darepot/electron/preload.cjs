@@ -44,4 +44,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectExecutable: (options) => ipcRenderer.invoke('dialog:select-executable', options),
   launchGame: (options) => ipcRenderer.invoke('game:launch', options),
   openGameFolder: (executablePath) => ipcRenderer.invoke('game:open-folder', executablePath),
+  searchGameDatabase: (query, options) => ipcRenderer.invoke('game:search-database', query, options),
 });

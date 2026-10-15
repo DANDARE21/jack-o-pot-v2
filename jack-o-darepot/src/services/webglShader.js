@@ -99,49 +99,68 @@ mat2 rot(float a) {
     return mat2(c, -s, s, c);
 }
 
-// Generate continuous scene color gradient (driven by Highs and Lows with incremental peak curves)
-vec3 generateSceneColor(vec2 uv, float t, float b, float tr) {
+// Generate continuous scene color gradient (driven by Highs, Mids, and Lows with incremental peak curves)
+vec3 generateSceneColor(vec2 uv, float t, float b, float tr, float m) {
     float intensity = 0.0;
 
     // Incremental non-linear peak curves: higher peaks trigger exponentially greater intensity
     float b_inc = pow(max(0.0, b), 1.7);
     float tr_inc = pow(max(0.0, tr), 1.8);
+    float m_inc = pow(max(0.0, m), 1.6);
 
     if (u_pattern == 0) {
-        // 0: Warped Plasma & Organic Waves
-        float zoom = 1.0 + (b_inc * 0.50);
+        // 0: Warped Plasma & Organic Waves (fluid liquid marble)
+        float zoom = 1.0 + (b_inc * 0.40);
         vec2 p = uv * zoom;
-        p *= rot(t * 0.18 + (b_inc * 0.35));
+        p *= rot(t * 0.20 + (b_inc * 0.35));
 
-        float w1 = sin(p.x * 2.5 + t) * cos(p.y * 2.5 + t * 0.8);
-        float w2 = sin((p.x + p.y) * 3.5 - t * (1.2 + tr_inc * 3.0));
-        float dist = length(p);
-        float ring = sin(dist * 6.0 - t * 3.0 - b_inc * 4.5) * (0.35 + b_inc * 0.25);
+        // Multi-frequency organic domain warping
+        vec2 q = vec2(sin(p.x * 2.2 + t * 0.8), cos(p.y * 2.2 + t * 0.7));
+        vec2 r = vec2(sin((p.x + q.y) * 2.8 + t * 1.1), cos((p.y + q.x) * 2.8 - t * 0.85));
 
-        intensity = 0.5 + 0.35 * w1 + 0.25 * w2 + ring + (b_inc * 0.35);
+        float w1 = sin(dot(p, q) * 2.4 + t);
+        float w2 = cos(dot(q, r) * 3.0 - t * (1.2 + tr_inc * 2.8));
+        float dist = length(p + r * 0.25);
+        float ring = sin(dist * 6.5 - t * 2.6 - b_inc * 4.0) * (0.30 + b_inc * 0.25);
+
+        // Highs treble ripples: acoustic surface flutter
+        float highRipples = sin((p.x - p.y) * 12.0 + t * 3.5) * tr_inc * 0.25;
+
+        intensity = 0.5 + 0.30 * w1 + 0.25 * w2 + ring + highRipples + (b_inc * 0.25);
     } else if (u_pattern == 1) {
-        // 1: Hypnotic Vortex Chasm
+        // 1: Hypnotic Vortex Chasm (dual counter-rotating logarithmic spirals)
         float dist = length(uv);
         float angle = atan(uv.y, uv.x);
-        float spiral = sin(angle * 4.0 + log(max(dist, 0.01)) * 5.0 - t * 2.5 - b_inc * 4.5);
-        float rings = sin(dist * 12.0 - t * 3.0);
-        intensity = 0.5 + 0.35 * spiral + 0.25 * rings + (b_inc * 0.45 * (1.0 - clamp(dist, 0.0, 1.0)));
+        float logDist = log(max(dist, 0.008));
+
+        float spiral1 = sin(angle * 5.0 + logDist * 5.5 - t * 2.2 - b_inc * 4.0);
+        float spiral2 = cos(angle * 3.0 - logDist * 3.8 + t * 1.5);
+        float rings = sin(dist * 13.0 - t * 3.0);
+
+        // Highs sound accent: radiating harmonic spokes
+        float spokes = sin(angle * 12.0 + t * 2.5) * tr_inc * 0.35;
+
+        intensity = 0.5 + 0.32 * spiral1 + 0.20 * spiral2 + 0.22 * rings + spokes + (b_inc * 0.40 * (1.0 - clamp(dist, 0.0, 1.0)));
     } else if (u_pattern == 2) {
         // 2: Soundwaves / Oscilloscope Ribbons
-        float y = uv.y * 2.0;
-        float x = uv.x * 3.0;
-        float wave1 = sin(x * 1.5 + t * 2.0) * (0.35 + b_inc * 0.75);
-        float wave2 = sin(x * 3.2 - t * 3.0 + tr_inc * 4.5) * (0.20 + tr_inc * 0.55);
+        float y = uv.y * 2.2;
+        float x = uv.x * 3.2;
+
+        // Ambient idle undulation breathing even without music
+        float ambientBreathing = sin(t * 1.2) * 0.15;
+        float wave1 = sin(x * 1.6 + t * 2.2) * (0.35 + ambientBreathing + b_inc * 0.70);
+        float wave2 = sin(x * 3.0 - t * 2.8 + tr_inc * 3.5) * (0.22 + tr_inc * 0.50);
+        float waveFlutter = sin(x * 14.0 + t * 7.0) * tr_inc * 0.18; // Treble flutter on cymbals/highs
 
         float dist1 = abs(y - wave1);
-        float dist2 = abs(y - wave2 - 0.4);
-        float dist3 = abs(y + wave1 * 0.5 + 0.5);
+        float dist2 = abs(y - wave2 - 0.35 - waveFlutter);
+        float dist3 = abs(y + wave1 * 0.5 + 0.45);
 
-        float glow1 = 0.15 / (dist1 + 0.08);
-        float glow2 = 0.12 / (dist2 + 0.08);
-        float glow3 = 0.10 / (dist3 + 0.08);
+        float glow1 = 0.16 / (dist1 + 0.07);
+        float glow2 = 0.13 / (dist2 + 0.07);
+        float glow3 = 0.10 / (dist3 + 0.07);
 
-        intensity = (glow1 + glow2 + glow3) * 0.45 + (b_inc * 0.30);
+        intensity = (glow1 + glow2 + glow3) * 0.42 + (b_inc * 0.28);
     } else if (u_pattern == 3) {
         // 3: Digital Perspective Grid / Cyber Void
         vec2 p = uv;
@@ -150,28 +169,31 @@ vec3 generateSceneColor(vec2 uv, float t, float b, float tr) {
         if (p.y < 0.0) {
             float z = -0.35 / (p.y - 0.02);
             float x = p.x * z;
-            vec2 grid = abs(fract(vec2(x, z - t * 3.0 - b_inc * 3.5)) - 0.5);
+            vec2 grid = abs(fract(vec2(x, z - t * 2.8 - b_inc * 3.0)) - 0.5);
             float line = smoothstep(0.40, 0.48, max(grid.x, grid.y));
-            intensity = line * (1.0 - clamp(-p.y * 1.2, 0.0, 1.0)) * 1.5 + (b_inc * 0.35);
+            // Highs neon pulse on grid lines
+            float gridPulse = line * (1.0 + tr_inc * 0.85);
+            intensity = gridPulse * (1.0 - clamp(-p.y * 1.2, 0.0, 1.0)) * 1.5 + (b_inc * 0.35);
         } else {
             float sunDist = length(p - vec2(0.0, 0.25));
             float sun = smoothstep(0.45 + b_inc * 0.20, 0.0, sunDist);
-            float rays = sin(atan(p.y - 0.25, p.x) * 12.0 + t) * 0.15;
-            intensity = (sun + rays) * 0.9 + (tr_inc * 0.4);
+            float rays = sin(atan(p.y - 0.25, p.x) * 12.0 + t * 1.2) * 0.18;
+            float horizonGlow = smoothstep(0.12, 0.0, abs(p.y)) * (0.25 + tr_inc * 0.50);
+            intensity = (sun + rays) * 0.85 + horizonGlow + (tr_inc * 0.35);
         }
     } else if (u_pattern == 4) {
-        // 4: Balatro Hypnotic Card Swirl (highs motion pattern)
+        // 4: Balatro Hypnotic Card Swirl
         float r = length(uv);
-        vec2 u = uv * (1.0 + b_inc * 0.40);
+        vec2 u = uv * (1.0 + b_inc * 0.35);
         float angle = atan(u.y, u.x);
-        u = 30.0 * r * sin(angle - 5.0 * r - vec2(0.65, 2.23));
+        u = 28.0 * r * sin(angle - 4.5 * r - vec2(0.65, 2.23));
 
         vec2 s = vec2(u.x) + u.yy;
         vec2 timeVec = t * vec2(0.92, -0.78);
 
         for (int i = 0; i < 5; i++) {
             s += vec2(sin(max(u.x, u.y))) + u;
-            u += sin(vec2(6.7 + 0.35 * s.y, s.x) + timeVec * (1.0 + tr_inc * 0.5)) * 0.5;
+            u += sin(vec2(6.7 + 0.35 * s.y, s.x) + timeVec * (1.0 + tr_inc * 0.6)) * 0.5;
             u -= vec2(cos(u.x + u.y) - sin(0.7 * u.x - u.y));
         }
 
@@ -184,22 +206,34 @@ vec3 generateSceneColor(vec2 uv, float t, float b, float tr) {
         balatroCol.b = s_out.x * 1.0 + s_out.y * 5.0;
 
         balatroCol = balatroCol * 0.1 + vec3(0.15) + vec3(dot(max(s_out - 0.8, 0.0), vec2(1.0, 2.0)));
-        intensity = clamp(dot(balatroCol, vec3(0.299, 0.587, 0.114)) + b_inc * 0.20, 0.0, 1.0);
+        intensity = clamp(dot(balatroCol, vec3(0.299, 0.587, 0.114)) + b_inc * 0.20 + tr_inc * 0.15, 0.0, 1.0);
     }
 
     intensity = clamp(intensity, 0.0, 1.0);
 
+    // Audio-reactive Color Wave Effect:
+    // Sound frequency energy pulses rhythmic color waves through the contours
+    float colorShift = (tr_inc * 0.32 + b_inc * 0.20 + m_inc * 0.18) * sin(intensity * 6.28318 - t * 2.5);
+    float modulatedIntensity = clamp(intensity + colorShift, 0.0, 1.0);
+
     vec3 col;
-    if (intensity < 0.333) {
-        col = mix(u_palette[0], u_palette[1], intensity / 0.333);
-    } else if (intensity < 0.666) {
-        col = mix(u_palette[1], u_palette[2], (intensity - 0.333) / 0.333);
+    if (modulatedIntensity < 0.333) {
+        col = mix(u_palette[0], u_palette[1], modulatedIntensity / 0.333);
+    } else if (modulatedIntensity < 0.666) {
+        col = mix(u_palette[1], u_palette[2], (modulatedIntensity - 0.333) / 0.333);
     } else {
-        col = mix(u_palette[2], u_palette[3], (intensity - 0.666) / 0.334);
+        col = mix(u_palette[2], u_palette[3], (modulatedIntensity - 0.666) / 0.334);
     }
 
-    // High peak flash highlight: escalates exponentially with higher peaks
-    col += u_palette[3] * (pow(max(0.0, tr), 2.2) * 0.70);
+    // Highs sound accent: electric ridge shimmer on high-contrast contours
+    float ridgeGlow = pow(abs(sin(intensity * 9.42 + t * 1.5)), 5.0) * tr_inc * 0.75;
+    col += u_palette[3] * ridgeGlow;
+
+    // Ambient sound accent: illuminates deep shadows with warm mid-tier palette tones on sound energy
+    col += u_palette[2] * (b_inc * 0.18 + tr_inc * 0.12) * (1.0 - modulatedIntensity);
+
+    // High peak flash highlight: escalates on sharp audio hits
+    col += u_palette[3] * (pow(max(0.0, tr), 2.0) * 0.60);
     return col;
 }
 
@@ -244,11 +278,26 @@ void main() {
     vec2 shakenCoord = pixelatedCoord + u_shake;
     vec2 uv = (shakenCoord - 0.5 * u_resolution) / min(u_resolution.x, u_resolution.y);
 
-    // 3. Highs control the generative background motion & frequency
+    // 3. Audio & Time parameters (Highs, Mids, Lows)
     float t = u_time;
     float b = u_lows * u_reactivity;
+    float m = u_mids * u_reactivity;
     float tr = u_highs * u_reactivity;
-    vec3 bgCol = generateSceneColor(uv, t, b, tr);
+
+    // Audio-reactive Chromatic Aberration:
+    // Treble and audio peaks separate color channels slightly for an electrifying retro CRT accent
+    float chromaOffset = (pow(max(0.0, tr), 1.7) * 0.035 + pow(max(0.0, b), 2.0) * 0.020);
+    vec3 bgCol;
+    if (chromaOffset > 0.003) {
+        vec2 uvR = uv * (1.0 + chromaOffset);
+        vec2 uvB = uv * (1.0 - chromaOffset);
+        vec3 colR = generateSceneColor(uvR, t, b, tr, m);
+        vec3 colG = generateSceneColor(uv, t, b, tr, m);
+        vec3 colB = generateSceneColor(uvB, t, b, tr, m);
+        bgCol = vec3(colR.r, colG.g, colB.b);
+    } else {
+        bgCol = generateSceneColor(uv, t, b, tr, m);
+    }
 
     // 4. Mids control the tiled logo background layer (size increases as sound peaks)
     vec4 logoColor = sampleTiledLogo(uv, u_logo_scale, u_logo_density);
