@@ -97,6 +97,12 @@ export class AudioCaptureService {
       midsSmoothing = 0.20,
       highsSmoothing = 0.15,
       audioGain = 1.2,
+      lowsMaxFreq = 120,
+      midsMaxFreq = 3500,
+      highsMaxFreq = 16000,
+      lowsGain = 1.5,
+      midsGain = 1.4,
+      highsGain = 1.5,
     } = options;
 
     const dt = Math.min(0.1, Math.max(0.001, (timeMs - this.lastTimeMs) * 0.001));
@@ -125,19 +131,19 @@ export class AudioCaptureService {
       const beatFraction = beatProgress % 1.0;
       const measureBeat = Math.floor(beatProgress) % 4; // 0, 1, 2, 3
 
-      // Kick drum on each beat (decay curve)
+      // Kick drum on each beat (decay curve) scaled by lowsGain
       const kick = Math.max(0, 1.0 - beatFraction * 3.5);
-      const synthLows = (Math.pow(kick, 2.0) * 0.9 + 0.1) * audioGain;
+      const synthLows = (Math.pow(kick, 2.0) * 0.9 + 0.1) * audioGain * (lowsGain / 1.5);
 
-      // Snare on beats 1 and 3 (0-indexed: 2nd and 4th beats)
+      // Snare on beats 1 and 3 (0-indexed: 2nd and 4th beats) scaled by midsGain
       const isSnareBeat = measureBeat === 1 || measureBeat === 3;
       const snare = isSnareBeat ? Math.max(0, 1.0 - beatFraction * 2.8) : 0;
-      const synthMids = (Math.pow(snare, 1.8) * 0.85 + 0.12) * audioGain;
+      const synthMids = (Math.pow(snare, 1.8) * 0.85 + 0.12) * audioGain * (midsGain / 1.4);
 
-      // Hi-hat 16th notes (4 ticks per beat)
+      // Hi-hat 16th notes (4 ticks per beat) scaled by highsGain
       const sixteenthFraction = (beatProgress * 4) % 1.0;
       const hihat = Math.max(0, 1.0 - sixteenthFraction * 4.0);
-      const synthHighs = (Math.pow(hihat, 1.5) * 0.75 + 0.15) * audioGain;
+      const synthHighs = (Math.pow(hihat, 1.5) * 0.75 + 0.15) * audioGain * (highsGain / 1.5);
 
       this.updatePeaks(
         Math.min(1.0, synthLows),
@@ -149,7 +155,7 @@ export class AudioCaptureService {
         highsSmoothing
       );
 
-      return {
+      const bands = {
         lows: Math.min(1.0, synthLows),
         mids: Math.min(1.0, synthMids),
         highs: Math.min(1.0, synthHighs),
@@ -159,6 +165,8 @@ export class AudioCaptureService {
         bass: Math.min(1.0, synthLows),
         treble: Math.min(1.0, synthHighs),
       };
+      this.currentBands = bands;
+      return bands;
     }
 
     this.analyser.getByteFrequencyData(this.freqData);
@@ -166,33 +174,33 @@ export class AudioCaptureService {
     const sampleRate = this.audioCtx ? this.audioCtx.sampleRate : 44100;
     const binWidth = sampleRate / (this.analyser.fftSize || 1024);
 
-    // 1. LOWS: Exactly 0 to 100 Hz (Sub-bass, 808s, and kick thump)
-    const lowBinMax = Math.max(1, Math.min(this.freqData.length, Math.ceil(100 / binWidth)));
+    // 1. LOWS: Exactly 0 to lowsMaxFreq Hz (Sub-bass, 808s, and kick thump)
+    const lowBinMax = Math.max(1, Math.min(this.freqData.length - 2, Math.ceil(lowsMaxFreq / binWidth)));
     let lowsSum = 0;
     for (let i = 0; i < lowBinMax; i++) {
       lowsSum += this.freqData[i];
     }
-    const rawLows = Math.min(1.0, ((lowsSum / lowBinMax / 255) * 1.5) * audioGain);
+    const rawLows = Math.min(1.0, ((lowsSum / lowBinMax / 255) * lowsGain) * audioGain);
 
-    // 2. MIDS: 100 Hz to 3500 Hz (Snares, claps, vocal body, brass, guitars, lead synths)
+    // 2. MIDS: lowsMaxFreq to midsMaxFreq Hz (Snares, claps, vocal body, brass, guitars, lead synths)
     const midBinMin = lowBinMax;
-    const midBinMax = Math.max(midBinMin + 1, Math.min(this.freqData.length, Math.ceil(3500 / binWidth)));
+    const midBinMax = Math.max(midBinMin + 1, Math.min(this.freqData.length - 1, Math.ceil(midsMaxFreq / binWidth)));
     let midsSum = 0;
     const midsCount = midBinMax - midBinMin;
     for (let i = midBinMin; i < midBinMax; i++) {
       midsSum += this.freqData[i];
     }
-    const rawMids = Math.min(1.0, ((midsSum / midsCount / 255) * 1.4) * audioGain);
+    const rawMids = Math.min(1.0, ((midsSum / midsCount / 255) * midsGain) * audioGain);
 
-    // 3. HIGHS: 3500 Hz to 16000 Hz (Hi-hats, percussive transients, cymbals, sizzle)
+    // 3. HIGHS: midsMaxFreq to highsMaxFreq Hz (Hi-hats, percussive transients, cymbals, sizzle)
     const highBinMin = midBinMax;
-    const highBinMax = Math.max(highBinMin + 1, Math.min(this.freqData.length, Math.ceil(16000 / binWidth)));
+    const highBinMax = Math.max(highBinMin + 1, Math.min(this.freqData.length, Math.ceil(highsMaxFreq / binWidth)));
     let highsSum = 0;
     const highsCount = highBinMax - highBinMin;
     for (let i = highBinMin; i < highBinMax; i++) {
       highsSum += this.freqData[i];
     }
-    const rawHighs = Math.min(1.0, ((highsSum / highsCount / 255) * 1.5) * audioGain);
+    const rawHighs = Math.min(1.0, ((highsSum / highsCount / 255) * highsGain) * audioGain);
 
     this.updatePeaks(
       rawLows,
@@ -204,7 +212,7 @@ export class AudioCaptureService {
       highsSmoothing
     );
 
-    return {
+    const bands = {
       lows: rawLows,
       mids: rawMids,
       highs: rawHighs,
@@ -213,6 +221,70 @@ export class AudioCaptureService {
       highsPeak: this.highsPeak,
       bass: rawLows,
       treble: rawHighs,
+    };
+    this.currentBands = bands;
+    return bands;
+  }
+
+  getSpectrumData() {
+    const sampleRate = this.audioCtx ? this.audioCtx.sampleRate : 44100;
+    const binCount = this.analyser ? this.analyser.frequencyBinCount : 512;
+
+    if (this.isCapturing && this.analyser && this.freqData) {
+      this.analyser.getByteFrequencyData(this.freqData);
+      return {
+        freqData: this.freqData,
+        sampleRate,
+        binCount: this.freqData.length,
+        isCapturing: true,
+        isSynthetic: Boolean(this.isSynthetic),
+        bands: this.currentBands || {
+          lows: 0,
+          mids: 0,
+          highs: 0,
+          lowsPeak: this.lowsPeak,
+          midsPeak: this.midsPeak,
+          highsPeak: this.highsPeak,
+        },
+      };
+    }
+
+    // Synthetic frequency visualizer fallback for previews / silent input
+    if (!this.syntheticFreqData || this.syntheticFreqData.length !== 128) {
+      this.syntheticFreqData = new Uint8Array(128);
+    }
+
+    const t = performance.now() * 0.001;
+    const kick = Math.max(0, 1.0 - ((t % 0.48) / 0.48) * 3.2);
+    const snare = Math.max(0, 1.0 - Math.abs(((t % 0.96) / 0.96) - 0.5) * 7.5);
+    const hat = Math.max(0, 1.0 - ((t % 0.12) / 0.12) * 2.8);
+
+    for (let i = 0; i < 128; i++) {
+      let val = 0;
+      if (i < 8) {
+        val = kick * 230 + Math.sin(t * 12 + i) * 35 + 25;
+      } else if (i < 48) {
+        val = snare * 190 + Math.sin(t * 8 + i * 0.6) * 45 + Math.sin(t * 3) * 25 + 20;
+      } else {
+        val = hat * 175 + Math.random() * 35 + Math.sin(t * 18 + i) * 20 + 15;
+      }
+      this.syntheticFreqData[i] = Math.max(0, Math.min(255, Math.round(val)));
+    }
+
+    return {
+      freqData: this.syntheticFreqData,
+      sampleRate,
+      binCount: 128,
+      isCapturing: this.isCapturing,
+      isSynthetic: true,
+      bands: this.currentBands || {
+        lows: kick,
+        mids: snare,
+        highs: hat,
+        lowsPeak: Math.max(this.lowsPeak, kick),
+        midsPeak: Math.max(this.midsPeak, snare),
+        highsPeak: Math.max(this.highsPeak, hat),
+      },
     };
   }
 

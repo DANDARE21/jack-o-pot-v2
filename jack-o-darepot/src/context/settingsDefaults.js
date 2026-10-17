@@ -52,6 +52,14 @@ export const DEFAULT_SETTINGS = {
   midsBaseScale: 0.25, // Resting logo size during silence (0.05 to 0.50)
   highsBaseDrift: 1.0, // Resting shader motion loop speed during silence (1.0 = 100% fluid loop; sounds accelerate)
 
+  // 3-Band Frequency Spectrum & Range Sliders
+  lowsMaxFreq: 120, // 40 Hz to 500 Hz (Upper cutoff for Lows/Bass)
+  midsMaxFreq: 3500, // 500 Hz to 8000 Hz (Upper cutoff for Mids / Crossover to Highs)
+  highsMaxFreq: 16000, // 4000 Hz to 20000 Hz (Upper limit for Highs/Treble)
+  lowsGain: 1.5, // 0.5x to 3.0x (Gain sensitivity multiplier for Lows)
+  midsGain: 1.4, // 0.5x to 3.0x (Gain sensitivity multiplier for Mids)
+  highsGain: 1.5, // 0.5x to 3.0x (Gain sensitivity multiplier for Highs)
+
   // Retro 8-bit UI Styles & Colors
   uiThemePreset: "jack_o_flame", // Theme key or 'custom'
   uiSyncWithBackground: true, // Auto-sync UI colors with background palette

@@ -165,13 +165,19 @@ export default function ReactiveBackground() {
         effectiveBaseDrift = 0.65 + effectiveBaseDrift * 2.5;
       }
 
-      // Extract real-time frequency bands with per-channel smoothing and pre-amp gain
+      // Extract real-time frequency bands with per-channel smoothing, pre-amp gain, and 3-band range calibrations
       const { lows, mids, highs, lowsPeak, midsPeak, highsPeak } =
         audioCaptureInstance.getBands(timeMs, {
           lowsSmoothing,
           midsSmoothing,
           highsSmoothing,
           audioGain,
+          lowsMaxFreq: s.lowsMaxFreq !== undefined ? s.lowsMaxFreq : 120,
+          midsMaxFreq: s.midsMaxFreq !== undefined ? s.midsMaxFreq : 3500,
+          highsMaxFreq: s.highsMaxFreq !== undefined ? s.highsMaxFreq : 16000,
+          lowsGain: s.lowsGain !== undefined ? s.lowsGain : 1.5,
+          midsGain: s.midsGain !== undefined ? s.midsGain : 1.4,
+          highsGain: s.highsGain !== undefined ? s.highsGain : 1.5,
         });
 
       // 1. LOWS (BASS): Background Viewport Shake

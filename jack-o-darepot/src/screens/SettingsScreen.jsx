@@ -25,6 +25,7 @@ import {
   getLogoTextureUrl,
 } from "../services/webglShader";
 import { UI_THEMES } from "../services/themeService";
+import FrequencySpectrumVisualizer from "../components/settings/FrequencySpectrumVisualizer";
 import { Icon } from "@iconify/react";
 import "../components/settings/SettingsModal.css";
 import "./SettingsScreen.css";
@@ -186,6 +187,12 @@ export default function SettingsScreen() {
       lowsBaseThreshold: settings.lowsBaseThreshold ?? 0.15,
       midsBaseScale: settings.midsBaseScale ?? 0.25,
       highsBaseDrift: settings.highsBaseDrift ?? 1.0,
+      lowsMaxFreq: settings.lowsMaxFreq ?? 120,
+      midsMaxFreq: settings.midsMaxFreq ?? 3500,
+      highsMaxFreq: settings.highsMaxFreq ?? 16000,
+      lowsGain: settings.lowsGain ?? 1.5,
+      midsGain: settings.midsGain ?? 1.4,
+      highsGain: settings.highsGain ?? 1.5,
       uiThemePreset: settings.uiThemePreset || "jack_o_flame",
       uiSyncWithBackground: settings.uiSyncWithBackground !== false,
       uiAccentColor: settings.uiAccentColor || "#ff6200",
@@ -256,11 +263,18 @@ export default function SettingsScreen() {
       {/* Tab Navigation */}
       <div className="settings-tabs">
         <button
-          className={`settings-tab-btn flex items-center gap-2 ${activeTab === "theme" || activeTab === "styles" || activeTab === "background" ? "active" : ""}`}
+          className={`settings-tab-btn flex items-center gap-2 ${activeTab === "theme" || activeTab === "styles" ? "active" : ""}`}
           onClick={() => setActiveTab("styles")}
         >
           <Icon icon="game-icons:paint-brush" className="text-lg text-ui-accent" />
           <span>Styles & Theme</span>
+        </button>
+        <button
+          className={`settings-tab-btn flex items-center gap-2 ${activeTab === "background" ? "active" : ""}`}
+          onClick={() => setActiveTab("background")}
+        >
+          <Icon icon="game-icons:wave-crest" className="text-lg text-ui-accent" />
+          <span>Background</span>
         </button>
         <button
           className={`settings-tab-btn flex items-center gap-2 ${activeTab === "data" ? "active" : ""}`}
@@ -559,7 +573,7 @@ export default function SettingsScreen() {
           </>
         )}
 
-        {(activeTab === "theme" || activeTab === "styles" || activeTab === "background") && (
+        {(activeTab === "theme" || activeTab === "styles") && (
           <>
             {/* UI Color & Styles Customization Section */}
             <SettingSection
@@ -739,7 +753,11 @@ export default function SettingsScreen() {
                 />
               </SettingRow>
             </SettingSection>
+          </>
+        )}
 
+        {(activeTab === "background" || activeTab === "styles") && (
+          <>
             {/* Setting Presets Section */}
             <SettingSection
               title="Theme & Personalization Presets"
@@ -986,6 +1004,19 @@ export default function SettingsScreen() {
                   onChange={(val) => updateSetting("backgroundResolutionScale", Number(val))}
                 />
               </SettingRow>
+            </SettingSection>
+
+            {/* Audio Frequency Spectrum & 3-Band Range Tuning */}
+            <SettingSection
+              title="Frequency Spectrum & Audio Band Tuning"
+              icon="game-icons:sound-waves"
+              description="Real-time interactive frequency spectrum analyzer with draggable cutoff boundaries and range sliders to calibrate how Lows, Mids, and Highs drive background animations."
+            >
+              <FrequencySpectrumVisualizer
+                settings={settings}
+                updateSetting={updateSetting}
+                applySettings={applySettings}
+              />
             </SettingSection>
 
             {/* 3-Band Audio Reactivity & Tiled Logo Layers */}
