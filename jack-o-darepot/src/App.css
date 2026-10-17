@@ -16,7 +16,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 50% 50%, var(--ui-accent-alpha-15) 0%, transparent 70%);
   pointer-events: none;
   z-index: 1;
@@ -144,7 +144,7 @@
   margin: 0;
   line-height: 1.1;
   color: var(--ui-accent);
-  text-shadow: 
+  text-shadow:
     0 0 10px var(--ui-accent-glow),
     0 0 25px var(--ui-accent-glow),
     0 0 50px var(--ui-accent-alpha-40),
@@ -173,10 +173,12 @@
     transform: scale(1) rotate(0deg);
     filter: drop-shadow(0 0 10px var(--ui-accent-glow)) drop-shadow(3px 3px 0px #000000);
   }
+
   50% {
     transform: scale(1.06) rotate(-3deg);
     filter: drop-shadow(0 0 22px var(--ui-accent-hover)) drop-shadow(3px 3px 0px #000000);
   }
+
   100% {
     transform: scale(1) rotate(2deg);
     filter: drop-shadow(0 0 14px var(--ui-accent-glow)) drop-shadow(3px 3px 0px #000000);
@@ -224,7 +226,7 @@
   right: 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
   z-index: 999;
   transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -236,35 +238,35 @@
 }
 
 .corner-btn {
-  width: 46px;
-  height: 46px;
-  background: var(--ui-bg-surface);
-  border: 2px solid var(--ui-border);
+  width: 60px;
+  height: 60px;
+  /*background: var(--ui-bg-surface);
+  border: 2px solid var(--ui-border);*/
   color: var(--ui-accent);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 3px 3px 0px #000000;
+  /*box-shadow: 3px 3px 0px #000000;*/
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
   position: relative;
 }
 
 .corner-btn:hover {
-  background: var(--ui-accent);
-  color: #000000;
-  border-color: #ffffff;
+  /*background: var(--ui-accent);*/
+  color: #ffffff;
+  /*border-color: #ffffff;*/
   transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0px #000000;
+  /*box-shadow: 5px 5px 0px #000000;*/
 }
 
 .corner-btn:active {
   transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px #000000;
+  /*box-shadow: 1px 1px 0px #000000;*/
 }
 
 .corner-btn-icon {
-  font-size: 1.3rem;
+  font-size: 2rem;
   transition: transform 0.2s ease;
 }
 
@@ -301,4 +303,3 @@
   background: #ffffff;
   border-color: #000000;
 }
-

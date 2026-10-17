@@ -17,7 +17,7 @@ export default function DesktopBar({ isFullscreen = false }) {
 
   useEffect(() => {
     if (isElectron && isMaximized) {
-      isMaximized().then((res) => setMaximized(Boolean(res))).catch(() => {});
+      isMaximized().then((res) => setMaximized(Boolean(res))).catch(() => { });
     }
 
     if (onMaximizeChange) {
@@ -40,7 +40,6 @@ export default function DesktopBar({ isFullscreen = false }) {
           <Icon icon="game-icons:pumpkin-lantern" className="text-ui-accent text-lg" />
           <span className="desktop-brand-name">JACK'O POT</span>
         </div>
-        <span className="desktop-version-badge">Desktop Edition</span>
       </div>
 
       {/* Draggable center area - all buttons removed */}

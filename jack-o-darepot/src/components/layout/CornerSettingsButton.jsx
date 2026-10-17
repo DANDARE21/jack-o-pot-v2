@@ -16,7 +16,6 @@ export default function CornerSettingsButton() {
           aria-label="Return to Reels"
         >
           <Icon icon="game-icons:slot-machine" className="corner-btn-icon text-xl" />
-          <span className="corner-btn-hotkey">ESC</span>
         </button>
       )}
 
@@ -28,7 +27,6 @@ export default function CornerSettingsButton() {
           aria-label="Open Collection"
         >
           <Icon icon="game-icons:retro-controller" className="corner-btn-icon text-xl" />
-          <span className="corner-btn-hotkey">C</span>
         </button>
       )}
 
@@ -40,7 +38,6 @@ export default function CornerSettingsButton() {
           aria-label="Open Leaderboard"
         >
           <Icon icon="game-icons:trophy" className="corner-btn-icon text-xl" />
-          <span className="corner-btn-hotkey">L</span>
         </button>
       )}
 
@@ -51,8 +48,7 @@ export default function CornerSettingsButton() {
           title="Settings (Press S)"
           aria-label="Open Settings"
         >
-          <Icon icon="game-icons:gears" className="corner-btn-icon text-xl" />
-          <span className="corner-btn-hotkey">S</span>
+          <Icon icon="streamline-ultimate:cog-bold" className="corner-btn-icon text-xl" />
         </button>
       )}
     </div>

@@ -525,7 +525,7 @@ export default function CollectionScreen() {
   const handleImportCatalog = async () => {
     const res = await importJsonFile?.({ title: "Import Games Collection JSON" });
     if (res?.data && typeof res.data === "object") {
-      resetGamesToDefault().catch(() => {});
+      resetGamesToDefault().catch(() => { });
       localStorage.setItem("jack_o_pot_games", JSON.stringify(res.data));
       window.location.reload();
     }
@@ -537,25 +537,10 @@ export default function CollectionScreen() {
       <header className="collection-topbar">
         {/* Left: Navigation & Branding */}
         <div className="topbar-left">
-          <button
-            type="button"
-            className="topbar-back-btn"
-            onClick={goBack}
-            title="Return to Game Reels (Esc)"
-          >
-            <Icon icon="game-icons:anticlockwise-rotation" className="text-ui-accent text-lg" />
-            <span>BACK TO REELS</span>
-            <span className="key-shortcut-tag">ESC</span>
-          </button>
 
-          <div className="topbar-divider" />
 
           <div className="topbar-brand">
             <Icon icon="game-icons:retro-controller" className="brand-controller-icon text-ui-accent" />
-            <div className="brand-text-col">
-              <span className="brand-title">ARCADE VAULT</span>
-              <span className="brand-subtitle">GAME CATALOG & LAUNCHER</span>
-            </div>
           </div>
         </div>
 
@@ -1380,21 +1365,20 @@ export default function CollectionScreen() {
                           <span>{showDbConfigDrawer ? "HIDE KEYS" : "IGDB KEYS"}</span>
                         </button>
                         <span
-                          className={`scraper-badge ${
-                            dbSearchProvider === "IGDB"
-                              ? "igdb"
-                              : dbSearchProvider === "OPEN_DB"
+                          className={`scraper-badge ${dbSearchProvider === "IGDB"
+                            ? "igdb"
+                            : dbSearchProvider === "OPEN_DB"
                               ? "open"
                               : ""
-                          }`}
+                            }`}
                         >
                           {dbSearchProvider === "IGDB"
                             ? "🟣 IGDB"
                             : dbSearchProvider === "OPEN_DB"
-                            ? "🌐 OPEN DB"
-                            : dbSearchProvider === "STEAM"
-                            ? "🎮 STEAM DB"
-                            : "STEAM & OPEN DB"}
+                              ? "🌐 OPEN DB"
+                              : dbSearchProvider === "STEAM"
+                                ? "🎮 STEAM DB"
+                                : "STEAM & OPEN DB"}
                         </span>
                       </div>
                     </div>
@@ -1543,19 +1527,18 @@ export default function CollectionScreen() {
                                   className="scraper-match-img"
                                 />
                                 <span
-                                  className={`scraper-card-source-badge ${
-                                    match.source === "IGDB"
-                                      ? "igdb"
-                                      : match.source === "OPEN_DB"
+                                  className={`scraper-card-source-badge ${match.source === "IGDB"
+                                    ? "igdb"
+                                    : match.source === "OPEN_DB"
                                       ? "open"
                                       : "steam"
-                                  }`}
+                                    }`}
                                 >
                                   {match.source === "IGDB"
                                     ? "IGDB"
                                     : match.source === "OPEN_DB"
-                                    ? "OPEN DB"
-                                    : "STEAM"}
+                                      ? "OPEN DB"
+                                      : "STEAM"}
                                 </span>
                               </div>
                               <div className="scraper-match-info">
@@ -1921,7 +1904,7 @@ export default function CollectionScreen() {
                     <img
                       src={fixAssetPath(
                         viewingScreenshotsGame.screenshots[activeScreenshotIdx] ||
-                          viewingScreenshotsGame.screenshots[0]
+                        viewingScreenshotsGame.screenshots[0]
                       )}
                       alt="Game Screenshot Full"
                       className="screenshot-main-img"
