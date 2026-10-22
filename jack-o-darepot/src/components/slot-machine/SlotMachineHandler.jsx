@@ -17,8 +17,17 @@ export default function SlotMachineHandler({
   const { showNotification, beep } = useElectron();
   const { settings } = useSettings();
   const game = useGame();
-  const { activeModifiers } = useModifiers();
+  const {
+    activeModifiers,
+    modifiers,
+    isModifierActive,
+    getModifierSettings,
+    setModifierEnabled,
+  } = useModifiers();
   const { navigate } = useNavigation();
+
+  const isCurseModifierActive = isModifierActive("jack_o_curse");
+  const curseSettings = getModifierSettings("jack_o_curse") || {};
 
   const players = propPlayers ?? game.players;
   const gamesByCategory = propGamesByCategory ?? game.gamesByCategory;
@@ -33,7 +42,9 @@ export default function SlotMachineHandler({
   } = game;
 
   const [cursedTrigger, setCursedTrigger] = useState(false);
+  const [cursedOverlayText, setCursedOverlayText] = useState("CURSED!");
   const [isCursedMode, setIsCursedMode] = useState(false);
+  const [primedCursedSpin, setPrimedCursedSpin] = useState(false);
 
   const [challenges, setChallenges] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -43,13 +54,11 @@ export default function SlotMachineHandler({
   const normalRef = useRef();
   const cursedRef = useRef();
 
-  // Load challenges/messages once (with logs)
+  // Load challenges/messages
   useEffect(() => {
-    console.log("[Handler] fetching challenges/messages...");
     fetch("/data/challenges.json")
       .then((res) => res.json())
       .then((data) => {
-        console.log("[Handler] fetched challenges:", data);
         setChallenges(data.challenges || []);
       })
       .catch((err) => {
@@ -59,7 +68,6 @@ export default function SlotMachineHandler({
     fetch("/data/messages.json")
       .then((res) => res.json())
       .then((data) => {
-        console.log("[Handler] fetched messages:", data);
         setMessages(data.messages || []);
       })
       .catch((err) => {
@@ -67,191 +75,129 @@ export default function SlotMachineHandler({
       });
   }, []);
 
-  // Helper: normalize name extraction from different shapes (with logs)
   const nameOf = (item, label = "item") => {
-    if (item === null || item === undefined) {
-      console.log(`[Handler][nameOf] ${label} is null/undefined -> "Unknown"`);
-      return "Unknown";
-    }
-    if (typeof item === "string") {
-      console.log(`[Handler][nameOf] ${label} is string ->`, item);
-      return item;
-    }
-    if (typeof item === "number") {
-      console.log(`[Handler][nameOf] ${label} is number ->`, String(item));
-      return String(item);
-    }
+    if (item === null || item === undefined) return "Unknown";
+    if (typeof item === "string") return item;
+    if (typeof item === "number") return String(item);
     if (typeof item === "object") {
-      if ("name" in item && item.name) {
-        console.log(`[Handler][nameOf] ${label}.name ->`, item.name);
-        return item.name;
-      }
-      // Try other common fields
-      if ("player" in item && typeof item.player === "string") {
-        console.log(`[Handler][nameOf] ${label}.player ->`, item.player);
-        return item.player;
-      }
-      if ("game" in item && typeof item.game === "string") {
-        console.log(`[Handler][nameOf] ${label}.game ->`, item.game);
-        return item.game;
-      }
-      console.log(`[Handler][nameOf] ${label} object has no name ->`, item);
+      if ("name" in item && item.name) return item.name;
+      if ("player" in item && typeof item.player === "string") return item.player;
+      if ("game" in item && typeof item.game === "string") return item.game;
       return "Unknown";
     }
-    console.log(`[Handler][nameOf] ${label} fallback ->`, item);
     return "Unknown";
   };
 
-  // Debug helper to pretty-print args and ref state
-  const debugLogSpinArgs = (prefix, args, ref) => {
-    console.log(`[Handler][${prefix}] callback args:`, args);
-    try {
-      console.log(`[Handler][${prefix}] ref.current:`, ref.current);
-    } catch (e) {
-      console.log(`[Handler][${prefix}] ref.current read error:`, e);
-    }
-  };
-
   const startSpin = () => {
-    if (!players.length || spinning) {
-      console.log("[Handler] startSpin blocked: players.length=", players.length, "spinning=", spinning);
-      return;
-    }
-    console.log("[Handler] Starting spin... isCursedMode=", isCursedMode);
+    if (!players.length || spinning) return;
     setSpinning(true);
 
-    if (isCursedMode) {
-      console.log("[Handler] Invoking cursedRef.spin()");
-      // Accept flexible callback signature
-      cursedRef.current.spin((...args) => {
-        debugLogSpinArgs("cursed", args, cursedRef);
+    const isRunningCursedSpin = isCursedMode || primedCursedSpin;
 
-        // normalize result object
-        let result = null;
-        if (args.length === 1) result = args[0];
-        else if (args.length >= 2) {
-          // could be (isCursed, result) or (result, extra)
-          if (typeof args[0] === "boolean") result = args[1];
-          else result = args[0];
-        }
-        console.log("[Handler] cursed spin normalized result:", result);
+    if (isRunningCursedSpin) {
+      console.log("[Handler] Launching CURSED SPIN...");
+      setIsCursedMode(true);
+      setPrimedCursedSpin(false);
 
-        const playerName = nameOf(result?.player ?? result?.playerName ?? result?.name, "player");
-        const gameName = nameOf(result?.game ?? result?.gameName ?? result?.game?.name, "game");
-        const challengeName = nameOf(result?.challenge ?? result?.challengeName ?? result?.challenge?.name, "challengeName");
-        const challengeText =
-          (typeof result?.challenge === "object" && result.challenge?.text) ||
-          result?.challengeText ||
-          result?.text ||
-          "No description";
+      // Brief delay to ensure CursedSlotMachine is mounted and ref is ready
+      setTimeout(() => {
+        cursedRef.current?.spin((...args) => {
+          let result =
+            args.length === 1
+              ? args[0]
+              : typeof args[0] === "boolean"
+              ? args[1]
+              : args[0];
 
-        console.log("[Handler] cursed resolved ->", { playerName, gameName, challengeName, challengeText });
+          console.log("[Handler] cursed spin callback resolved:", result);
 
-        if (settings.desktopNotifications) {
-          showNotification({
-            title: "CURSED DARE DECIDED!",
-            body: `${playerName}: ${challengeName}`,
-          });
-        }
+          const playerName = nameOf(result?.player, "player");
+          const gameName = nameOf(result?.game, "game");
+          const modifierObj = result?.modifier || null;
+          const challengeName =
+            result?.challengeName ||
+            result?.challenge?.name ||
+            `${modifierObj?.name || "Cursed"} Dare`;
+          const challengeText =
+            result?.challengeText ||
+            result?.challenge?.text ||
+            `Conquer ${gameName} with the activated modifier!`;
 
-        // Record player spin on leaderboard
-        game.recordPlayerSpin?.(playerName);
+          // Activate the rolled modifier in-game
+          if (modifierObj?.id) {
+            console.log("[Handler] Activating modifier into game:", modifierObj.name);
+            setModifierEnabled(modifierObj.id, true);
+          }
 
-        const gameObj = typeof result?.game === "object" ? result.game : null;
+          // Reset the curse meter back to 0
+          resetCurse();
 
-        setPopupData({
-          type: "cursed",
-          player: playerName,
-          game: gameName,
-          gameImage: gameObj?.image,
-          executablePath: gameObj?.executablePath,
-          launchArgs: gameObj?.launchArgs,
-          challengeName,
-          challengeText,
-          onResolveDare: (won) => {
-            game.recordChallengeOutcome?.(playerName, {
-              won,
-              points: won ? 100 : 0,
-              dareName: challengeName,
+          if (settings.desktopNotifications) {
+            showNotification({
+              title: "CURSED DARE & MODIFIER ACTIVATED!",
+              body: `${playerName}: ${gameName} + ${modifierObj?.name || "Modifier"}!`,
             });
-          },
-          onClose: () => {
-            console.log("[Handler] popup closed (cursed) -> switching back to normal");
-            setPopupData(null);
-            setIsCursedMode(false);
-          },
+          }
+
+          game.recordPlayerSpin?.(playerName);
+
+          const gameObj = typeof result?.game === "object" ? result.game : null;
+
+          setPopupData({
+            type: "cursed",
+            player: playerName,
+            game: gameName,
+            gameImage: gameObj?.image,
+            executablePath: gameObj?.executablePath,
+            launchArgs: gameObj?.launchArgs,
+            modifier: modifierObj,
+            challengeName,
+            challengeText,
+            onResolveDare: (won) => {
+              game.recordChallengeOutcome?.(playerName, {
+                won,
+                points: won ? 100 : 0,
+                dareName: `${challengeName} (${modifierObj?.name || "Cursed"})`,
+              });
+            },
+            onClose: () => {
+              setPopupData(null);
+              setIsCursedMode(false);
+              setPrimedCursedSpin(false);
+            },
+          });
+
+          setSpinning(false);
+          setCursedTrigger(false);
         });
-
-        setSpinning(false);
-        setCursedTrigger(false);
-      });
+      }, 50);
     } else {
-      console.log("[Handler] Invoking normalRef.spin()");
-      normalRef.current.spin((...args) => {
-        debugLogSpinArgs("normal", args, normalRef);
+      console.log("[Handler] Launching NORMAL spin...");
+      normalRef.current?.spin((isJackopot, result) => {
+        console.log("[Handler] normal spin callback resolved:", { isJackopot, result });
 
-        // Normalize callback signature:
-        // possible signatures:
-        // - (isCursed)
-        // - (isCursed, result)
-        // - (result)
-        // - ( ) -> nothing
-        let isCursed = false;
-        let result = null;
-
-        if (args.length === 0) {
-          // nothing
-          isCursed = false;
-          result = null;
-        } else if (args.length === 1) {
-          if (typeof args[0] === "boolean") {
-            isCursed = args[0];
-            result = null;
-          } else {
-            isCursed = false;
-            result = args[0];
-          }
-        } else {
-          isCursed = Boolean(args[0]);
-          result = args[1];
-        }
-
-        // If no result, try to fallback to lastResult stored on ref (some components use that)
-        if (!result) {
-          try {
-            result = normalRef.current?.lastResult ?? null;
-            console.log("[Handler] fallback result from normalRef.current.lastResult:", result);
-          } catch (e) {
-            console.log("[Handler] error reading normalRef.current.lastResult:", e);
-          }
-        }
-
-        console.log("[Handler] normalized normal spin -> isCursed:", isCursed, "result:", result);
-
-        if (isCursed) {
-          console.log("[Handler] Normal spin reported CURSED.");
+        if (isJackopot) {
+          // 6-6-6 JACK'O POT HIT!
+          console.log("[Handler] 666 JACK'O POT! Priming next spin as CURSED SPIN!");
           if (settings.systemBeepOnCurse) beep();
           if (settings.desktopNotifications) {
             showNotification({
-              title: "CURSED REEL TRIGGERED!",
-              body: "The machine whispers back... cursed mode activated!",
+              title: "🔥 JACK'O POT! 6-6-6 UNLEASHED! 🔥",
+              body: "The reels hit 666! The next spin is a CURSED SPIN!",
             });
           }
+
+          setCursedOverlayText("JACK'O POT!");
           setCursedTrigger(true);
-          resetCurse();
-          setTimeout(() => {
-            setIsCursedMode(true);
-            setSpinning(false);
-          }, 800);
+          setPrimedCursedSpin(true);
+          setSpinning(false);
           return;
         }
 
-        // Extract names safely
+        // Normal spin result
         const playerName = nameOf(result?.player ?? result?.playerName ?? result?.name, "player");
         const categoryName = nameOf(result?.category ?? result?.categoryName ?? result?.category?.name, "category");
         const gameName = nameOf(result?.game ?? result?.gameName ?? result?.game?.name ?? result?.name, "game");
-
-        console.log("[Handler] normal resolved ->", { playerName, categoryName, gameName });
 
         if (settings.desktopNotifications) {
           showNotification({
@@ -260,9 +206,6 @@ export default function SlotMachineHandler({
           });
         }
 
-        // Update curse and spin count BEFORE popup
-        increaseCurse();
-        setSpinCount((prev) => prev + 1);
         game.recordPlayerSpin?.(playerName);
 
         const gameObj = typeof result?.game === "object" ? result.game : null;
@@ -283,7 +226,6 @@ export default function SlotMachineHandler({
             });
           },
           onClose: () => {
-            console.log("[Handler] popup closed (normal)");
             setPopupData(null);
           },
         });
@@ -294,15 +236,16 @@ export default function SlotMachineHandler({
   };
 
   const spinExpansionScale = settings.spinExpansionScale ?? 1.13;
-  // When spinning, the stats bar hides. Calculate clearance so the spin button positions cleanly below the enlarged cabinet
   const controlsOffsetY = spinning
     ? Math.round((spinExpansionScale - 1) * 160 + 24)
     : 0;
 
+  const isCursedActive = isCursedMode || primedCursedSpin;
+
   return (
     <div className="handler-container">
-      {/* Cursed overlay */}
-      <CursedText trigger={cursedTrigger} />
+      {/* Cursed Overlay Announcement */}
+      <CursedText trigger={cursedTrigger} text={cursedOverlayText} />
 
       {/* Slot machine */}
       <motion.div
@@ -330,8 +273,8 @@ export default function SlotMachineHandler({
             spinning={spinning}
             messages={messages}
             fastSpinMode={settings.fastSpinMode}
-            baseCurseChance={settings.baseCurseChance}
-            maxCurseCap={settings.maxCurseCap}
+            curseModifierActive={isCurseModifierActive}
+            curseSettings={curseSettings}
           />
         ) : (
           <CursedSlotMachine
@@ -342,6 +285,7 @@ export default function SlotMachineHandler({
             messages={messages}
             spinning={spinning}
             fastSpinMode={settings.fastSpinMode}
+            modifiers={modifiers}
           />
         )}
       </motion.div>
@@ -380,9 +324,15 @@ export default function SlotMachineHandler({
               <div className="hud-divider" />
               <div className="hud-stat-item">
                 <span className="hud-stat-label">MACHINE STATUS</span>
-                <span className={`hud-status-badge ${isCursedMode ? "status-cursed" : "status-ready"}`}>
+                <span className={`hud-status-badge ${isCursedActive ? "status-cursed" : "status-ready"}`}>
                   <span className="status-indicator-dot" />
-                  <span>{isCursedMode ? "CURSED" : "READY"}</span>
+                  <span>
+                    {primedCursedSpin
+                      ? "666 PRIMED"
+                      : isCursedMode
+                      ? "CURSED"
+                      : "READY"}
+                  </span>
                 </span>
               </div>
               <div className="hud-divider" />
@@ -403,7 +353,7 @@ export default function SlotMachineHandler({
 
         {/* Big Juicy Arcade Spin Button */}
         <motion.button
-          className={`arcade-spin-button ${isCursedMode ? "cursed" : ""} ${spinning ? "spinning" : ""}`}
+          className={`arcade-spin-button ${isCursedActive ? "cursed" : ""} ${spinning ? "spinning" : ""}`}
           onClick={startSpin}
           disabled={spinning || !players.length}
           whileHover={!spinning && players.length ? { scale: 1.04 } : {}}
@@ -412,7 +362,7 @@ export default function SlotMachineHandler({
           <span className="spin-btn-icon flex items-center justify-center">
             {spinning ? (
               <Icon icon="game-icons:anticlockwise-rotation" className="animate-spin text-2xl" />
-            ) : isCursedMode ? (
+            ) : isCursedActive ? (
               <Icon icon="game-icons:skull-crossed-bones" className="text-2xl" />
             ) : (
               <Icon icon="game-icons:rolling-dices" className="text-2xl" />
@@ -423,14 +373,16 @@ export default function SlotMachineHandler({
               ? "LOAD PLAYERS FIRST"
               : spinning
               ? "ROLLING FATE..."
+              : primedCursedSpin
+              ? "UNLEASH 666 CURSED SPIN"
               : isCursedMode
-              ? "TRIGGER CURSED DARE"
+              ? "TRIGGER CURSED SPIN"
               : "SPIN THE DAREPOT"}
           </span>
         </motion.button>
       </motion.div>
 
-      {/* Popup */}
+      {/* Result Popup */}
       {popupData && <SpinResultPopup {...popupData} />}
     </div>
   );

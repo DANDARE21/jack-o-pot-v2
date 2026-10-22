@@ -1,31 +1,61 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, useMemo, forwardRef, useImperativeHandle } from "react";
 import SlotReel from "./SlotReel";
 import { motion } from "framer-motion";
 import { Howl } from "howler";
 import { Icon } from "@iconify/react";
+import { useModifiers } from "@/context";
 import "./SlotMachine.css";
 
 const CursedSlotMachine = forwardRef(
-  ({ players, gamesByCategory, challenges, messages, spinning, fastSpinMode = false }, ref) => {
+  (
+    {
+      players = [],
+      gamesByCategory = {},
+      challenges = [],
+      messages = [],
+      spinning,
+      fastSpinMode = false,
+      modifiers: propModifiers,
+    },
+    ref
+  ) => {
     const durationMult = fastSpinMode ? 0.5 : 1;
+    const { modifiers: contextModifiers } = useModifiers();
+    const modifiersList = propModifiers || contextModifiers || [];
+
+    // Filter out the curse trigger modifier itself so it selects another fun modifier to activate
+    const safeModifiers = useMemo(() => {
+      const eligible = modifiersList.filter((m) => m.id !== "jack_o_curse");
+      return eligible.length > 0 ? eligible : modifiersList;
+    }, [modifiersList]);
+
+    const allGames = useMemo(() => Object.values(gamesByCategory || {}).flat(), [gamesByCategory]);
+    const playerItems = useMemo(() => (players || []).map((p) => p.name || p), [players]);
+    const gameItems = useMemo(
+      () => allGames.map((g) => ({ name: g.name, image: g.image || null })),
+      [allGames]
+    );
+    const modifierItems = useMemo(
+      () => safeModifiers.map((m) => ({ name: m.name, icon: m.icon })),
+      [safeModifiers]
+    );
+
     const [player, setPlayer] = useState("?");
     const [game, setGame] = useState("?");
-    const [challengeName, setChallengeName] = useState("?");
-    const [challengeText, setChallengeText] = useState("?");
+    const [modifierName, setModifierName] = useState("?");
     const [displayText, setDisplayText] = useState("");
     const [preloadedImages, setPreloadedImages] = useState([]);
 
-    const allGames = Object.values(gamesByCategory).flat();
-    const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const getRandom = (arr) => (arr.length ? arr[Math.floor(Math.random() * arr.length)] : null);
 
-    // ✅ Preload game images
+    // Preload game images
     useEffect(() => {
       const imgs = [];
-      Object.values(gamesByCategory).forEach((category) => {
-        category.forEach((game) => {
-          if (game.image) {
+      Object.values(gamesByCategory || {}).forEach((category) => {
+        category.forEach((g) => {
+          if (g.image) {
             const img = new Image();
-            img.src = game.image;
+            img.src = g.image;
             imgs.push(img);
           }
         });
@@ -33,56 +63,71 @@ const CursedSlotMachine = forwardRef(
       setPreloadedImages(imgs);
     }, [gamesByCategory]);
 
-    // ✅ Spin sound
-    const cursedSpinSound = new Howl({
-      src: ["/assets/sounds/spin.mp3"],
-      volume: 0.9,
-    });
+    // Spin sound
+    const cursedSpinSound = useMemo(() => {
+      try {
+        return new Howl({
+          src: ["/assets/sounds/spin.mp3"],
+          volume: 0.9,
+        });
+      } catch (e) {
+        return null;
+      }
+    }, []);
+
+    useEffect(() => {
+      return () => {
+        cursedSpinSound?.stop();
+      };
+    }, [cursedSpinSound]);
 
     useImperativeHandle(ref, () => ({
       spin(onComplete) {
-        if (!players.length || !allGames.length || !challenges.length) return;
+        if (!players.length || !allGames.length) return;
 
         console.log("[CursedSlotMachine] Starting cursed spin...");
-        cursedSpinSound.play();
-        setDisplayText(getRandom(messages));
+        cursedSpinSound?.play();
+        setDisplayText("⚡ CURSED SPIN UNLEASHED • ROLLING MODIFIER & GAME ⚡");
 
         const selectedPlayer = getRandom(players);
         const selectedGame = getRandom(allGames);
-        const selectedChallenge = getRandom(challenges);
-
-        console.log("[CursedSlotMachine] Selected player:", selectedPlayer);
-        console.log("[CursedSlotMachine] Selected game:", selectedGame);
-        console.log("[CursedSlotMachine] Selected challenge:", selectedChallenge);
+        const selectedModifier = getRandom(safeModifiers) || {
+          id: "phantom_reel",
+          name: "Phantom Spectral Reel",
+        };
+        const selectedChallenge = challenges.length > 0 ? getRandom(challenges) : null;
 
         // Update reels
-        setPlayer(selectedPlayer.name || selectedPlayer);
-        setGame(selectedGame.name || selectedGame);
-        setChallengeName(selectedChallenge.name || "???");
-        setChallengeText(selectedChallenge.text || "???");
+        setPlayer(selectedPlayer?.name || selectedPlayer || "Victim");
+        setGame(selectedGame?.name || selectedGame || "Cursed Game");
+        setModifierName(selectedModifier.name);
 
-        // 🕒 Wait for reels to finish
+        const maxDuration = Math.round(8000 * durationMult);
+
+        // 1. Stop spin sound as soon as the last reel locks in
         setTimeout(() => {
-          console.log("[CursedSlotMachine] Spin complete.");
+          cursedSpinSound?.stop();
+        }, maxDuration);
+
+        // 2. Wait 1 full second with the still machine showing results before calling onComplete
+        const modalDelay = maxDuration + Math.round(1100 * durationMult);
+
+        setTimeout(() => {
+          console.log("[CursedSlotMachine] Cursed spin complete.");
           const result = {
             player: selectedPlayer,
             game: selectedGame,
-            challengeName: selectedChallenge.name,
-            challengeText: selectedChallenge.text,
+            modifier: selectedModifier,
+            challengeName: selectedChallenge?.name || `${selectedModifier.name} Trial`,
+            challengeText:
+              selectedChallenge?.text ||
+              `Play ${selectedGame.name || "the game"} with ${selectedModifier.name} active!`,
           };
 
-          console.log("[CursedSlotMachine] Finished spin with:", result);
           if (onComplete) onComplete(result);
-        }, Math.round(8100 * durationMult));
+        }, modalDelay);
       },
     }));
-
-    // ✅ Random spinning image for visual feedback
-    const getRandomImage = () => {
-      if (!preloadedImages.length) return null;
-      const randomIndex = Math.floor(Math.random() * preloadedImages.length);
-      return preloadedImages[randomIndex].src;
-    };
 
     return (
       <div className={`slot-machine-cabinet cursed ${spinning ? "is-spinning" : ""}`}>
@@ -100,7 +145,7 @@ const CursedSlotMachine = forwardRef(
             ) : (
               <>
                 <Icon icon="game-icons:skull-crossed-bones" className="text-ui-cursed inline-block" />
-                <span>CURSED REELS ACTIVATED</span>
+                <span>CURSED REELS ACTIVATED • ACTIVATING MODIFIER</span>
                 <Icon icon="game-icons:skull-crossed-bones" className="text-ui-cursed inline-block" />
               </>
             )}
@@ -111,36 +156,38 @@ const CursedSlotMachine = forwardRef(
         <div className="slots-wrapper">
           <SlotReel
             label="VICTIM"
-            items={players.map((p) => p.name || p)}
+            items={playerItems}
             finalValue={player}
             spinTime={Math.round(4000 * durationMult)}
             spinning={spinning}
             cursed={true}
             pitch={1}
+            allowSixInSpin={true}
+            fastSpinMode={fastSpinMode}
           />
 
           <SlotReel
             label="GAME"
-            items={allGames.map((g) => ({
-              name: g.name,
-              image: g.image || null,
-            }))}
+            items={gameItems}
             finalValue={game}
             spinTime={Math.round(6000 * durationMult)}
             spinning={spinning}
             cursed={true}
             pitch={1.15}
-            getRandomImage={getRandomImage}
+            allowSixInSpin={true}
+            fastSpinMode={fastSpinMode}
           />
 
           <SlotReel
-            label="CURSED DARE"
-            items={challenges.map((c) => c.name || "Unknown Challenge")}
-            finalValue={challengeName}
+            label="CURSED MODIFIER"
+            items={modifierItems}
+            finalValue={modifierName}
             spinTime={Math.round(8000 * durationMult)}
             spinning={spinning}
             cursed={true}
             pitch={1.3}
+            allowSixInSpin={true}
+            fastSpinMode={fastSpinMode}
           />
         </div>
       </div>

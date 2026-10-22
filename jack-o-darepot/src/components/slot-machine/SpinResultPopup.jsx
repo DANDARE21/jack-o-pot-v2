@@ -14,6 +14,7 @@ export default function SpinResultPopup({
   gameImage,
   challengeName,
   challengeText,
+  modifier,
   executablePath,
   launchArgs,
   onResolveDare,
@@ -200,10 +201,40 @@ export default function SpinResultPopup({
                     <span className="cursed-game-name">{game || "Cursed Game"}</span>
                   </div>
 
+                  {modifier && (
+                    <div className="cursed-modifier-showcase">
+                      <div className="cursed-modifier-badge-row">
+                        <span className="cursed-mod-active-tag">
+                          <Icon icon="game-icons:lightning-trio" className="animate-pulse" />
+                          <span>MODIFIER ACTIVATED</span>
+                        </span>
+                        {modifier.rarity && (
+                          <span
+                            className="cursed-mod-rarity-tag"
+                            style={{ borderColor: modifier.color || "#ff1744", color: modifier.color || "#ff1744" }}
+                          >
+                            {modifier.rarity}
+                          </span>
+                        )}
+                      </div>
+                      <div className="cursed-modifier-header">
+                        <Icon
+                          icon={modifier.icon || "game-icons:crystal-wand"}
+                          className="text-xl"
+                          style={{ color: modifier.color || "var(--ui-cursed)" }}
+                        />
+                        <span className="cursed-modifier-name">{modifier.name}</span>
+                      </div>
+                      <p className="cursed-modifier-description">
+                        {modifier.tagline || modifier.description || "Modifier engaged in the game!"}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="cursed-dare-banner">
                     <div className="cursed-dare-header">
                       <Icon icon="game-icons:skull-crossed-bones" className="text-base" />
-                      <span>DARE: {challengeName || "MYSTERY CURSE"}</span>
+                      <span>{modifier ? "CURSED OBJECTIVE" : "DARE"}: {challengeName || "MYSTERY CURSE"}</span>
                     </div>
                     <p className="cursed-dare-description">{challengeText || "No description provided."}</p>
                   </div>
