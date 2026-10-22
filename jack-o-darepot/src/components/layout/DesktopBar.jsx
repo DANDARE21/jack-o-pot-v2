@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import { useElectron } from "../hooks/useElectron";
+import { useElectron } from "@/hooks";
 import "./DesktopBar.css";
 
 export default function DesktopBar({ isFullscreen = false }) {

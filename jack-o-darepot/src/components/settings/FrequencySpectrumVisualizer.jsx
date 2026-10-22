@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Icon } from "@iconify/react";
-import { audioCaptureInstance } from "../../services/audioCapture";
+import { audioCaptureInstance } from "@/services";
 import "./FrequencySpectrumVisualizer.css";
 
 const MIN_FREQ = 20;

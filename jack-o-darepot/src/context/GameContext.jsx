@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useSettings } from "./SettingsContext";
-import { useFullscreen } from "../hooks/useFullscreen";
+import { useFullscreen } from "@/hooks";
 
 const GameContext = createContext(null);
 

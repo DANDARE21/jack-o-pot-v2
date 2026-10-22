@@ -1,16 +1,19 @@
-import { GameProvider, useGame } from "./context/GameContext";
-import { useSettings } from "./context/SettingsContext";
-import { NavigationProvider, useNavigation } from "./navigation/NavigationContext";
-import Navigator from "./navigation/Navigator";
-import DesktopBar from "./components/DesktopBar";
-import CornerSettingsButton from "./components/layout/CornerSettingsButton";
-import ReactiveBackground from "./components/background/ReactiveBackground";
+import { useEffect } from "react";
+import { GameProvider, useGame, useSettings, ModifierProvider } from "@/context";
+import { NavigationProvider, useNavigation, Navigator } from "@/navigation";
+import { initGlobalSoundEffects } from "@/services";
+import { DesktopBar, CornerSettingsButton, ReactiveBackground } from "@/components";
 import "./App.css";
 
 function AppShell() {
   const { settings } = useSettings();
   const { isFullscreen, isSpinning } = useGame();
   const { currentScreen } = useNavigation();
+
+  useEffect(() => {
+    const cleanup = initGlobalSoundEffects();
+    return cleanup;
+  }, []);
 
   return (
     <div
@@ -38,9 +41,11 @@ function AppShell() {
 export default function App() {
   return (
     <GameProvider>
-      <NavigationProvider>
-        <AppShell />
-      </NavigationProvider>
+      <ModifierProvider>
+        <NavigationProvider>
+          <AppShell />
+        </NavigationProvider>
+      </ModifierProvider>
     </GameProvider>
   );
 }

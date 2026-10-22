@@ -1,17 +1,15 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useGame } from "../context/GameContext";
-import { useNavigation } from "../navigation/NavigationContext";
-import { useElectron } from "../hooks/useElectron";
-import { SCREENS } from "../navigation/screens";
+import { useGame } from "@/context";
+import { useNavigation, SCREENS } from "@/navigation";
+import { useElectron } from "@/hooks";
 import { Icon } from "@iconify/react";
 import { Howl } from "howler";
 import "./LeaderboardScreen.css";
 
 const PRESET_AVATARS = [
   { label: "DanDare", src: "/assets/images/dandare.png" },
-  { label: "Pumpkin King", src: "/assets/images/pumpkin.png" },
-  { label: "Cursed Skull", src: "/assets/images/skull.png" },
   { label: "The Beast", src: "/assets/images/six.png" },
+  { label: "Vault Placeholder", src: "/assets/images/placeholder.svg" },
 ];
 
 const PRESET_TITLES = [
@@ -552,11 +550,11 @@ export default function LeaderboardScreen() {
                   </div>
                   <div className="podium-avatar-wrap">
                     <img
-                      src={podiumPlayers.second.image || "/assets/images/pumpkin.png"}
+                      src={podiumPlayers.second.image || "/assets/images/placeholder.svg"}
                       alt={podiumPlayers.second.name}
                       className="podium-avatar"
                       onError={(e) => {
-                        e.target.src = "/assets/images/pumpkin.png";
+                        e.target.src = "/assets/images/placeholder.svg";
                       }}
                     />
                   </div>
@@ -604,7 +602,7 @@ export default function LeaderboardScreen() {
                   alt={podiumPlayers.first.name}
                   className="podium-avatar gold-avatar"
                   onError={(e) => {
-                    e.target.src = "/assets/images/pumpkin.png";
+                    e.target.src = "/assets/images/placeholder.svg";
                   }}
                 />
               </div>
@@ -645,11 +643,11 @@ export default function LeaderboardScreen() {
                   </div>
                   <div className="podium-avatar-wrap">
                     <img
-                      src={podiumPlayers.third.image || "/assets/images/skull.png"}
+                      src={podiumPlayers.third.image || "/assets/images/placeholder.svg"}
                       alt={podiumPlayers.third.name}
                       className="podium-avatar"
                       onError={(e) => {
-                        e.target.src = "/assets/images/pumpkin.png";
+                        e.target.src = "/assets/images/placeholder.svg";
                       }}
                     />
                   </div>
@@ -806,11 +804,11 @@ export default function LeaderboardScreen() {
                     <td className="col-player">
                       <div className="player-meta-wrap">
                         <img
-                          src={player.image || "/assets/images/pumpkin.png"}
+                          src={player.image || "/assets/images/placeholder.svg"}
                           alt={player.name}
                           className="player-thumb"
                           onError={(e) => {
-                            e.target.src = "/assets/images/pumpkin.png";
+                            e.target.src = "/assets/images/placeholder.svg";
                           }}
                         />
                         <div className="player-meta-text">
@@ -1029,7 +1027,7 @@ export default function LeaderboardScreen() {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="/assets/images/pumpkin.png or custom URL"
+                  placeholder="/assets/images/placeholder.svg or custom URL"
                   value={playerFormData.image}
                   onChange={(e) => setPlayerFormData({ ...playerFormData, image: e.target.value })}
                 />
@@ -1399,11 +1397,11 @@ export default function LeaderboardScreen() {
 
             <div className="dossier-hero">
               <img
-                src={selectedPlayer.image || "/assets/images/pumpkin.png"}
+                src={selectedPlayer.image || "/assets/images/placeholder.svg"}
                 alt={selectedPlayer.name}
                 className="dossier-avatar"
                 onError={(e) => {
-                  e.target.src = "/assets/images/pumpkin.png";
+                  e.target.src = "/assets/images/placeholder.svg";
                 }}
               />
               <div className="dossier-hero-info">

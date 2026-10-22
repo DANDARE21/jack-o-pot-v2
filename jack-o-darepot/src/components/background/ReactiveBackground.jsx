@@ -4,10 +4,9 @@ import {
   COLOR_PALETTES,
   PATTERN_MAP,
   getLogoTextureUrl,
-} from "../../services/webglShader";
-import { audioCaptureInstance } from "../../services/audioCapture";
-import { useSettings } from "../../context/SettingsContext";
-import { useGame } from "../../context/GameContext";
+  audioCaptureInstance,
+} from "@/services";
+import { useSettings, useGame } from "@/context";
 import "./ReactiveBackground.css";
 
 // Backward-compatibility alias map for legacy palette keys

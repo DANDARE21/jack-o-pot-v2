@@ -4,9 +4,9 @@ import CursedSlotMachine from "./CursedSlotMachine";
 import { motion, AnimatePresence } from "framer-motion";
 import CursedText from "./CursedText";
 import SpinResultPopup from "./SpinResultPopup";
-import { useElectron } from "../hooks/useElectron";
-import { useSettings } from "../context/SettingsContext";
-import { useGame } from "../context/GameContext";
+import { useElectron } from "@/hooks";
+import { useSettings, useGame, useModifiers } from "@/context";
+import { useNavigation, SCREENS } from "@/navigation";
 import { Icon } from "@iconify/react";
 import "./SlotMachineHandler.css";
 
@@ -17,6 +17,8 @@ export default function SlotMachineHandler({
   const { showNotification, beep } = useElectron();
   const { settings } = useSettings();
   const game = useGame();
+  const { activeModifiers } = useModifiers();
+  const { navigate } = useNavigation();
 
   const players = propPlayers ?? game.players;
   const gamesByCategory = propGamesByCategory ?? game.gamesByCategory;
@@ -381,6 +383,18 @@ export default function SlotMachineHandler({
                 <span className={`hud-status-badge ${isCursedMode ? "status-cursed" : "status-ready"}`}>
                   <span className="status-indicator-dot" />
                   <span>{isCursedMode ? "CURSED" : "READY"}</span>
+                </span>
+              </div>
+              <div className="hud-divider" />
+              <div
+                className="hud-stat-item hud-stat-clickable cursor-pointer"
+                onClick={() => navigate(SCREENS.MODIFIERS)}
+                title="Manage Slot Modifiers (Press M)"
+              >
+                <span className="hud-stat-label">MODIFIERS</span>
+                <span className="hud-stat-value flex items-center gap-1.5 text-ui-accent hover:underline">
+                  <Icon icon="game-icons:magic-swirl" className="text-ui-accent text-base" />
+                  <span>{activeModifiers.length > 0 ? `${activeModifiers.length} ACTIVE` : "MUTED"}</span>
                 </span>
               </div>
             </motion.div>

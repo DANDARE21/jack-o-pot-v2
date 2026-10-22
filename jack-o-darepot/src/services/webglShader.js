@@ -405,14 +405,14 @@ export const PATTERN_MAP = {
 
 export const LOGO_TEXTURE_OPTIONS = [
   { value: "dandare", label: "Dandare (Default)", url: "/assets/images/dandare.png", icon: "game-icons:crown" },
-  { value: "pumpkin", label: "Pixel Pumpkin", url: "/assets/images/pumpkin.png", icon: "game-icons:jack-o-lantern" },
-  { value: "skull", label: "Demonic Skull", url: "/assets/images/skull.png", icon: "game-icons:skull-crossed-bones" },
   { value: "six", label: "Six Logo", url: "/assets/images/six.png", icon: "game-icons:rolling-dices" },
+  { value: "placeholder", label: "Neon Vault Placeholder", url: "/assets/images/placeholder.svg", icon: "game-icons:jack-o-lantern" },
   { value: "custom", label: "Custom Texture / Upload", url: "", icon: "game-icons:photo-camera" },
 ];
 
 export function getLogoTextureUrl(textureKey, customUrl = "") {
   if (textureKey === "custom" && customUrl) return customUrl;
+  if (textureKey === "pumpkin" || textureKey === "skull") return "/assets/images/placeholder.svg";
   const match = LOGO_TEXTURE_OPTIONS.find((t) => t.value === textureKey);
   return match?.url || "/assets/images/dandare.png";
 }

@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { useGame } from "../context/GameContext";
-import { useNavigation } from "../navigation/NavigationContext";
-import { useElectron } from "../hooks/useElectron";
+import { useGame } from "@/context";
+import { useNavigation } from "@/navigation";
+import { useElectron } from "@/hooks";
 import { Howl } from "howler";
 import { Icon } from "@iconify/react";
-import { searchGameDatabase } from "../services/gameScraper";
+import { searchGameDatabase } from "@/services";
 import "./CollectionScreen.css";
 
 export default function CollectionScreen() {
@@ -29,6 +29,7 @@ export default function CollectionScreen() {
     beep,
     importJsonFile,
     exportJsonFile,
+    testIgdbConnection,
   } = useElectron();
 
   // Search & Filters
@@ -70,6 +71,8 @@ export default function CollectionScreen() {
   const [igdbClientId, setIgdbClientId] = useState(() => localStorage.getItem("jackopot_igdb_client_id") || "");
   const [igdbClientSecret, setIgdbClientSecret] = useState(() => localStorage.getItem("jackopot_igdb_client_secret") || "");
   const [newScreenshotInput, setNewScreenshotInput] = useState("");
+  const [isTestingIgdb, setIsTestingIgdb] = useState(false);
+  const [igdbTestStatus, setIgdbTestStatus] = useState(null); // { type: 'success' | 'error', message }
 
   // Screenshots Lightbox Viewer State
   const [viewingScreenshotsGame, setViewingScreenshotsGame] = useState(null);
@@ -244,7 +247,14 @@ export default function CollectionScreen() {
 
     if (res && !res.canceled && res.filePath) {
       const selectedPath = res.filePath;
-      const cleanFileName = res.fileName ? res.fileName.replace(/\.(exe|bat|cmd|lnk|url)$/i, "") : "";
+      // Intelligent game title extraction: strip file extension, release tags like (USA) or [FitGirl], dots/underscores
+      const rawBase = res.fileName || "";
+      const cleanFileName = rawBase
+        .replace(/\.(exe|bat|cmd|lnk|url|iso|bin|cue|rom|z64|sfc|nes|gba|gbc|nds|3ds|nsp|xci)$/i, "")
+        .replace(/\[.*?\]|\(.*?\)/g, "")
+        .replace(/[_.-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
 
       if (targetCategory && targetIndex !== null && currentGame) {
         updateGameInCategory(targetCategory, targetIndex, {
@@ -253,11 +263,18 @@ export default function CollectionScreen() {
         });
         showNotice("success", `Linked "${res.fileName}" to "${currentGame.name}"!`);
       } else {
+        const titleToUse = gameFormData.name.trim() || cleanFileName;
         setGameFormData((prev) => ({
           ...prev,
           executablePath: selectedPath,
-          name: prev.name.trim() ? prev.name : cleanFileName,
+          name: titleToUse,
         }));
+
+        // Automatically trigger Game DB / IGDB scraper for the selected game!
+        if (titleToUse) {
+          handleSearchDatabase(titleToUse);
+          showNotice("success", `Auto-looking up "${titleToUse}" across IGDB and game databases...`);
+        }
       }
     }
   };
@@ -283,14 +300,17 @@ export default function CollectionScreen() {
         setDbSearchResults(res.results);
         const provider = res.provider || res.results[0]?.source || "STEAM";
         setDbSearchProvider(provider);
-        if (provider === "OPEN_DB") {
-          showNotice("success", `Found artwork on Open Video Game Database for "${term}"!`);
-        } else if (provider === "IGDB") {
+        if (provider === "IGDB") {
           showNotice("success", `Found official match on IGDB for "${term}"!`);
+        } else if (provider === "STEAM") {
+          showNotice("success", `Found official match on Steam for "${term}"!`);
+        } else if (provider === "OPEN_DB") {
+          showNotice("success", `Found artwork on Open Video Game Database for "${term}"!`);
         }
       } else {
         setDbSearchError(
-          `No online matches found for "${term}" across Steam, IGDB, and Open Game DB. You can still paste custom artwork links below.`
+          res?.error ||
+            `No online matches found for "${term}" across Steam, IGDB, and Open Game DB. You can still paste custom artwork links below.`
         );
       }
     } catch (err) {
@@ -304,7 +324,39 @@ export default function CollectionScreen() {
     localStorage.setItem("jackopot_igdb_client_id", igdbClientId.trim());
     localStorage.setItem("jackopot_igdb_client_secret", igdbClientSecret.trim());
     showNotice("success", "IGDB API credentials saved locally!");
+    setIgdbTestStatus(null);
     setShowDbConfigDrawer(false);
+  };
+
+  const handleTestIgdb = async () => {
+    if (!igdbClientId.trim() || !igdbClientSecret.trim()) {
+      showNotice("error", "Please enter both Twitch Client ID & Secret to test.");
+      return;
+    }
+    setIsTestingIgdb(true);
+    setIgdbTestStatus(null);
+    try {
+      if (testIgdbConnection) {
+        const res = await testIgdbConnection({
+          clientId: igdbClientId.trim(),
+          clientSecret: igdbClientSecret.trim(),
+        });
+        if (res?.success) {
+          setIgdbTestStatus({ type: "success", message: "✓ IGDB v4 Connected!" });
+          showNotice("success", res.message || "Connected to IGDB v4 successfully!");
+        } else {
+          setIgdbTestStatus({ type: "error", message: res?.error || "Auth failed" });
+          showNotice("error", `IGDB connection failed: ${res?.error || "Check keys"}`);
+        }
+      } else {
+        setIgdbTestStatus({ type: "success", message: "Credentials valid." });
+      }
+    } catch (err) {
+      setIgdbTestStatus({ type: "error", message: err.message });
+      showNotice("error", `Test error: ${err.message}`);
+    } finally {
+      setIsTestingIgdb(false);
+    }
   };
 
   // Apply scraped database game metadata
@@ -1124,6 +1176,17 @@ export default function CollectionScreen() {
                                   <button
                                     type="button"
                                     className="card-icon-tool-btn"
+                                    onClick={() => {
+                                      openEditGameModal(categoryName, originalIndex, game);
+                                      setTimeout(() => handleSearchDatabase(game.name), 80);
+                                    }}
+                                    title="Auto-lookup artwork & metadata on IGDB/Steam"
+                                  >
+                                    <Icon icon="game-icons:satellite-communication" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="card-icon-tool-btn"
                                     onClick={() => openEditGameModal(categoryName, originalIndex, game)}
                                     title="Edit Game Settings"
                                   >
@@ -1271,6 +1334,18 @@ export default function CollectionScreen() {
                                   </button>
                                 )}
 
+                                 <button
+                                  type="button"
+                                  className="table-tool-btn"
+                                  onClick={() => {
+                                    openEditGameModal(categoryName, originalIndex, game);
+                                    setTimeout(() => handleSearchDatabase(game.name), 80);
+                                  }}
+                                  title="Auto-lookup artwork & metadata on IGDB/Steam"
+                                >
+                                  <Icon icon="game-icons:satellite-communication" />
+                                </button>
+
                                 <button
                                   type="button"
                                   className="table-tool-btn"
@@ -1365,12 +1440,13 @@ export default function CollectionScreen() {
                           <span>{showDbConfigDrawer ? "HIDE KEYS" : "IGDB KEYS"}</span>
                         </button>
                         <span
-                          className={`scraper-badge ${dbSearchProvider === "IGDB"
-                            ? "igdb"
-                            : dbSearchProvider === "OPEN_DB"
-                              ? "open"
-                              : ""
-                            }`}
+                          className={`scraper-badge ${
+                            dbSearchProvider === "IGDB" || (!dbSearchProvider && igdbClientId.trim())
+                              ? "igdb"
+                              : dbSearchProvider === "OPEN_DB"
+                                ? "open"
+                                : ""
+                          }`}
                         >
                           {dbSearchProvider === "IGDB"
                             ? "🟣 IGDB"
@@ -1378,7 +1454,9 @@ export default function CollectionScreen() {
                               ? "🌐 OPEN DB"
                               : dbSearchProvider === "STEAM"
                                 ? "🎮 STEAM DB"
-                                : "STEAM & OPEN DB"}
+                                : igdbClientId.trim()
+                                  ? "🟣 IGDB READY"
+                                  : "STEAM & OPEN DB"}
                         </span>
                       </div>
                     </div>
@@ -1413,17 +1491,39 @@ export default function CollectionScreen() {
                             onChange={(e) => setIgdbClientSecret(e.target.value)}
                           />
                         </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-[0.66rem] text-muted font-mono">
-                            {igdbClientId ? "✓ IGDB Credentials configured" : "Open Game Database fallback active"}
-                          </span>
-                          <button
-                            type="button"
-                            className="scraper-save-keys-btn"
-                            onClick={handleSaveIgdbKeys}
-                          >
-                            SAVE CREDENTIALS
-                          </button>
+                        <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[0.66rem] text-muted font-mono">
+                              {igdbClientId.trim() ? "✓ Credentials stored locally" : "Open Game Database fallback active"}
+                            </span>
+                            {igdbTestStatus && (
+                              <span
+                                className={`text-[0.66rem] font-mono font-bold ${
+                                  igdbTestStatus.type === "success" ? "text-green-400" : "text-red-400"
+                                }`}
+                              >
+                                {igdbTestStatus.message}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="scraper-test-keys-btn"
+                              onClick={handleTestIgdb}
+                              disabled={isTestingIgdb || !igdbClientId.trim()}
+                              title="Test Twitch API Authentication & IGDB connection"
+                            >
+                              {isTestingIgdb ? "TESTING..." : "TEST IGDB"}
+                            </button>
+                            <button
+                              type="button"
+                              className="scraper-save-keys-btn"
+                              onClick={handleSaveIgdbKeys}
+                            >
+                              SAVE CREDENTIALS
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1455,7 +1555,7 @@ export default function CollectionScreen() {
                         className="scraper-fetch-btn"
                         onClick={() => handleSearchDatabase()}
                         disabled={isSearchingDb}
-                        title="Auto-search Steam Store with Open DB fallback"
+                        title="Auto-search online databases (IGDB prioritized if credentials set)"
                       >
                         {isSearchingDb ? (
                           <>
@@ -1468,6 +1568,28 @@ export default function CollectionScreen() {
                             <span>FETCH ARTWORK</span>
                           </>
                         )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="scraper-igdb-btn"
+                        onClick={() => handleSearchDatabase(null, "igdb")}
+                        disabled={isSearchingDb}
+                        title="Directly query IGDB (Twitch API) Database"
+                      >
+                        <Icon icon="game-icons:gamepad-cross" className="text-base text-purple-300" />
+                        <span>IGDB</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="scraper-steam-btn"
+                        onClick={() => handleSearchDatabase(null, "steam")}
+                        disabled={isSearchingDb}
+                        title="Directly query Steam Store Database"
+                      >
+                        <Icon icon="game-icons:steam-locomotive" className="text-base text-sky-300" />
+                        <span>STEAM</span>
                       </button>
 
                       <button
@@ -1494,20 +1616,42 @@ export default function CollectionScreen() {
                     {dbSearchResults.length > 0 && (
                       <div className="scraper-results-container">
                         <div className="scraper-results-header">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-mono font-bold text-ui-accent">
                               MATCHES ({dbSearchResults.length} FOUND VIA {dbSearchProvider || "DATABASE"}):
                             </span>
-                            {dbSearchProvider === "STEAM" && (
-                              <button
-                                type="button"
-                                className="scraper-retry-open-btn"
-                                onClick={() => handleSearchDatabase(null, "open")}
-                                title="Not the title you wanted? Search Open Game Database"
-                              >
-                                Not on Steam? Try Open DB →
-                              </button>
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              {dbSearchProvider !== "IGDB" && (
+                                <button
+                                  type="button"
+                                  className="scraper-retry-igdb-btn"
+                                  onClick={() => handleSearchDatabase(null, "igdb")}
+                                  title="Try searching IGDB"
+                                >
+                                  Try IGDB →
+                                </button>
+                              )}
+                              {dbSearchProvider !== "STEAM" && (
+                                <button
+                                  type="button"
+                                  className="scraper-retry-steam-btn"
+                                  onClick={() => handleSearchDatabase(null, "steam")}
+                                  title="Try searching Steam Store"
+                                >
+                                  Try Steam →
+                                </button>
+                              )}
+                              {dbSearchProvider !== "OPEN_DB" && (
+                                <button
+                                  type="button"
+                                  className="scraper-retry-open-btn"
+                                  onClick={() => handleSearchDatabase(null, "open")}
+                                  title="Try searching Open Video Game Database"
+                                >
+                                  Try Open DB →
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <button
                             type="button"

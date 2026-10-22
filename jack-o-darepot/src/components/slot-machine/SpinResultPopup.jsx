@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { useElectron } from "../hooks/useElectron";
-import { useNavigation } from "../navigation/NavigationContext";
-import { SCREENS } from "../navigation/screens";
+import { useElectron } from "@/hooks";
+import { useNavigation, SCREENS } from "@/navigation";
+import { playForfeit, playHoverChicken } from "@/services";
 import "./SpinResultPopup.css";
 
 export default function SpinResultPopup({
@@ -57,6 +57,7 @@ export default function SpinResultPopup({
 
   const handleDenyDare = () => {
     if (resolvedStatus) return;
+    playForfeit();
     setResolvedStatus("denied");
     onResolveDare?.(false);
     setTimeout(() => {
@@ -173,6 +174,9 @@ export default function SpinResultPopup({
                         src={fixAssetPath(gameImage)}
                         alt={game}
                         className="game-cover-art"
+                        onError={(e) => {
+                          e.target.src = "/assets/images/placeholder.svg";
+                        }}
                       />
                     ) : (
                       <div className="game-icon-fallback">
@@ -275,11 +279,16 @@ export default function SpinResultPopup({
               </div>
             </motion.button>
 
-            {/* OPTION 2: DENY DARE */}
+            {/* OPTION 2: DENY DARE (FORFEIT) */}
             <motion.button
               type="button"
-              className="popup-hero-option-btn deny-btn"
+              className="popup-hero-option-btn deny-btn forfeit-btn"
+              data-sound-hover="hoverChicken"
+              data-sound-click="forfeit"
               onClick={handleDenyDare}
+              onMouseEnter={() => {
+                if (!resolvedStatus) playHoverChicken();
+              }}
               disabled={Boolean(resolvedStatus)}
               whileHover={!resolvedStatus ? { scale: 1.03 } : {}}
               whileTap={!resolvedStatus ? { scale: 0.97 } : {}}

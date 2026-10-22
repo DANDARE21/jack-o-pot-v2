@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Howler } from "howler";
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "./settingsDefaults";
 import { SettingsContext } from "./SettingsContextInstance";
-import { applyThemeToDom } from "../services/themeService";
+import { applyThemeToDom } from "@/services";
 export { useSettings } from "./useSettings";
 
 export function SettingsProvider({ children }) {

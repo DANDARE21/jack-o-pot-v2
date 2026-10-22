@@ -1,7 +1,6 @@
 import React from "react";
 import { Icon } from "@iconify/react";
-import { useNavigation } from "../../navigation/NavigationContext";
-import { SCREENS } from "../../navigation/screens";
+import { useNavigation, SCREENS } from "@/navigation";
 
 export default function CornerSettingsButton() {
   const { currentScreen, navigate } = useNavigation();
@@ -38,6 +37,17 @@ export default function CornerSettingsButton() {
           aria-label="Open Leaderboard"
         >
           <Icon icon="game-icons:trophy" className="corner-btn-icon text-xl" />
+        </button>
+      )}
+
+      {currentScreen !== SCREENS.MODIFIERS && (
+        <button
+          className="corner-btn corner-mod-btn"
+          onClick={() => navigate(SCREENS.MODIFIERS)}
+          title="Slot Modifiers (Press M)"
+          aria-label="Open Slot Modifiers"
+        >
+          <Icon icon="game-icons:magic-swirl" className="corner-btn-icon text-xl" />
         </button>
       )}
 

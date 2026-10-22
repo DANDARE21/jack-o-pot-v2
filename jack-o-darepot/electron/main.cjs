@@ -430,39 +430,99 @@ async function querySteamDatabase(cleanQuery) {
 }
 
 // 2. IGDB (Internet Game Database via Twitch OAuth)
+let igdbTokenCache = {
+  token: null,
+  clientId: null,
+  clientSecret: null,
+  expiresAt: 0,
+};
+
+async function getTwitchAccessToken(clientId, clientSecret) {
+  const now = Date.now();
+  if (
+    igdbTokenCache.token &&
+    igdbTokenCache.clientId === clientId &&
+    igdbTokenCache.clientSecret === clientSecret &&
+    igdbTokenCache.expiresAt > now + 60000 // valid for at least 1 more minute
+  ) {
+    return igdbTokenCache.token;
+  }
+
+  try {
+    const tokenRes = await fetch(
+      `https://id.twitch.tv/oauth2/token?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&grant_type=client_credentials`,
+      { method: 'POST' }
+    );
+    if (!tokenRes.ok) {
+      const errText = await tokenRes.text().catch(() => '');
+      console.warn('Twitch OAuth token request failed:', tokenRes.status, errText);
+      return null;
+    }
+    const tokenJson = await tokenRes.json();
+    const token = tokenJson.access_token;
+    const expiresIn = (tokenJson.expires_in || 3600) * 1000;
+    igdbTokenCache = {
+      token,
+      clientId,
+      clientSecret,
+      expiresAt: now + expiresIn,
+    };
+    return token;
+  } catch (err) {
+    console.warn('Error fetching Twitch OAuth token:', err.message);
+    return null;
+  }
+}
+
 async function queryIGDBDatabase(cleanQuery, clientId, clientSecret, accessToken = null) {
-  if (!clientId || (!clientSecret && !accessToken)) return [];
+  const effectiveClientId = clientId || process.env.IGDB_CLIENT_ID || process.env.TWITCH_CLIENT_ID;
+  const effectiveClientSecret = clientSecret || process.env.IGDB_CLIENT_SECRET || process.env.TWITCH_CLIENT_SECRET;
+
+  if (!effectiveClientId || (!effectiveClientSecret && !accessToken)) return [];
+
   try {
     let token = accessToken;
-    if (!token && clientSecret) {
-      const tokenRes = await fetch(
-        `https://id.twitch.tv/oauth2/token?client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&grant_type=client_credentials`,
-        { method: 'POST' }
-      );
-      if (tokenRes.ok) {
-        const tokenJson = await tokenRes.json();
-        token = tokenJson.access_token;
-      }
+    if (!token && effectiveClientSecret) {
+      token = await getTwitchAccessToken(effectiveClientId, effectiveClientSecret);
     }
     if (!token) return [];
 
-    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
-      method: 'POST',
-      headers: {
-        'Client-ID': clientId,
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-      },
-      body: `search "${cleanQuery.replace(/"/g, '')}"; fields name, summary, cover.image_id, screenshots.image_id, artworks.image_id, genres.name, first_release_date; limit 6;`,
-    });
+    // Sanitize query string for IGDB Apex API
+    const sanitized = cleanQuery.replace(/["\\;\n\r]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!sanitized) return [];
 
-    if (!igdbRes.ok) return [];
-    const games = await igdbRes.json();
-    if (!Array.isArray(games) || games.length === 0) return [];
+    const fetchIgdb = async (term) => {
+      const escaped = term.replace(/"/g, '');
+      const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+        method: 'POST',
+        headers: {
+          'Client-ID': effectiveClientId,
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+        body: `search "${escaped}"; fields name, summary, cover.image_id, screenshots.image_id, artworks.image_id, genres.name, first_release_date, platforms.name, total_rating; limit 8;`,
+      });
+      if (!igdbRes.ok) return [];
+      const data = await igdbRes.json();
+      return Array.isArray(data) ? data : [];
+    };
+
+    let games = await fetchIgdb(sanitized);
+
+    // If exact query with punctuation had 0 matches, retry with relaxed query (e.g. "God of War: Ragnarök" -> "God of War Ragnarök")
+    if (games.length === 0 && /[:\-–—_&]/.test(sanitized)) {
+      const relaxed = sanitized.replace(/[:\-–—_&]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (relaxed && relaxed !== sanitized) {
+        games = await fetchIgdb(relaxed);
+      }
+    }
+
+    if (games.length === 0) return [];
 
     return games.map((g) => {
+      // Use high-resolution 2x retina covers (528x748) for stunning clarity
       const coverUrl = g.cover?.image_id
-        ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${g.cover.image_id}.jpg`
+        ? `https://images.igdb.com/igdb/image/upload/t_cover_big_2x/${g.cover.image_id}.jpg`
         : '';
       const bannerUrl = g.artworks?.[0]?.image_id
         ? `https://images.igdb.com/igdb/image/upload/t_1080p/${g.artworks[0].image_id}.jpg`
@@ -474,15 +534,25 @@ async function queryIGDBDatabase(cleanQuery, clientId, clientSecret, accessToken
         (s) => `https://images.igdb.com/igdb/image/upload/t_1080p/${s.image_id}.jpg`
       );
 
+      const releaseYear = g.first_release_date
+        ? new Date(g.first_release_date * 1000).getFullYear().toString()
+        : '';
+
+      const platforms = (g.platforms || []).map((p) => p.name);
+      const genres = (g.genres || []).map((genre) => genre.name);
+
       return {
         id: `igdb_${g.id}`,
         name: g.name,
         verticalArtwork: coverUrl,
         horizontalArtwork: bannerUrl,
         screenshots,
+        background: bannerUrl || coverUrl,
         description: g.summary || '',
-        releaseDate: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear().toString() : '',
-        genres: (g.genres || []).map((genre) => genre.name),
+        releaseDate: releaseYear,
+        genres,
+        platforms,
+        rating: g.total_rating ? Math.round(g.total_rating) : null,
         source: 'IGDB',
       };
     });
@@ -583,48 +653,113 @@ ipcMain.handle('game:search-database', async (event, query, options = {}) => {
 
   const cleanQuery = query.trim();
   const { forceProvider, igdbClientId, igdbClientSecret, igdbAccessToken } = options;
+  const effectiveClientId = igdbClientId || process.env.IGDB_CLIENT_ID || process.env.TWITCH_CLIENT_ID;
+  const effectiveClientSecret = igdbClientSecret || process.env.IGDB_CLIENT_SECRET || process.env.TWITCH_CLIENT_SECRET;
 
   try {
     // Case A: User explicitly requested IGDB
     if (forceProvider === 'igdb') {
-      const igdbResults = await queryIGDBDatabase(cleanQuery, igdbClientId, igdbClientSecret, igdbAccessToken);
+      const igdbResults = await queryIGDBDatabase(cleanQuery, effectiveClientId, effectiveClientSecret, igdbAccessToken);
       if (igdbResults.length > 0) {
         return { success: true, results: igdbResults, provider: 'IGDB' };
       }
+      return { success: true, results: [], provider: 'IGDB', error: `No matches found on IGDB for "${cleanQuery}".` };
     }
 
-    // Case B: User explicitly requested Open Game DB
+    // Case B: User explicitly requested Steam
+    if (forceProvider === 'steam') {
+      const steamResults = await querySteamDatabase(cleanQuery);
+      if (steamResults.length > 0) {
+        return { success: true, results: steamResults, provider: 'STEAM' };
+      }
+      return { success: true, results: [], provider: 'STEAM', error: `No matches found on Steam for "${cleanQuery}".` };
+    }
+
+    // Case C: User explicitly requested Open Game DB
     if (forceProvider === 'open') {
       const openResults = await queryOpenGameDatabase(cleanQuery);
       return { success: true, results: openResults, provider: 'OPEN_DB' };
     }
 
     // Default Multi-Tier Automatic Waterfall:
-    // 1. Try Steam Store First
-    let results = await querySteamDatabase(cleanQuery);
-    if (results.length > 0) {
-      return { success: true, results, provider: 'STEAM' };
-    }
-
-    // 2. If Steam has 0 matches, check IGDB if credentials exist
-    if (igdbClientId && (igdbClientSecret || igdbAccessToken)) {
-      results = await queryIGDBDatabase(cleanQuery, igdbClientId, igdbClientSecret, igdbAccessToken);
-      if (results.length > 0) {
-        return { success: true, results, provider: 'IGDB' };
+    // 1. If IGDB credentials exist, query IGDB first (highest quality metadata & artwork across all platforms)
+    if (effectiveClientId && (effectiveClientSecret || igdbAccessToken)) {
+      const igdbResults = await queryIGDBDatabase(cleanQuery, effectiveClientId, effectiveClientSecret, igdbAccessToken);
+      if (igdbResults.length > 0) {
+        return { success: true, results: igdbResults, provider: 'IGDB' };
       }
     }
 
+    // 2. Next in waterfall: Steam Store Search
+    const steamResults = await querySteamDatabase(cleanQuery);
+    if (steamResults.length > 0) {
+      return { success: true, results: steamResults, provider: 'STEAM' };
+    }
+
     // 3. Fallback to Open Video Game Database (no keys required, covers console & retro games)
-    results = await queryOpenGameDatabase(cleanQuery);
+    const openResults = await queryOpenGameDatabase(cleanQuery);
     return {
       success: true,
-      results,
-      provider: results.length > 0 ? 'OPEN_DB' : 'NONE',
+      results: openResults,
+      provider: openResults.length > 0 ? 'OPEN_DB' : 'NONE',
     };
   } catch (err) {
     console.error('Unified game database search failed:', err);
     return { success: false, error: err.message, results: [] };
   }
 });
+
+// IGDB Credentials Connection Tester
+ipcMain.handle('igdb:test-connection', async (event, credentials = {}) => {
+  const effectiveClientId = credentials.clientId || process.env.IGDB_CLIENT_ID || process.env.TWITCH_CLIENT_ID;
+  const effectiveClientSecret = credentials.clientSecret || process.env.IGDB_CLIENT_SECRET || process.env.TWITCH_CLIENT_SECRET;
+
+  if (!effectiveClientId || !effectiveClientSecret) {
+    return {
+      success: false,
+      error: 'Please enter both Twitch Client ID and Client Secret.',
+    };
+  }
+
+  try {
+    const token = await getTwitchAccessToken(effectiveClientId, effectiveClientSecret);
+    if (!token) {
+      return {
+        success: false,
+        error: 'Failed to authenticate with Twitch. Please verify your Client ID and Client Secret.',
+      };
+    }
+
+    // Test a lightweight query to IGDB v4
+    const testRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': effectiveClientId,
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
+      body: 'fields name; limit 1;',
+    });
+
+    if (!testRes.ok) {
+      const errText = await testRes.text().catch(() => '');
+      return {
+        success: false,
+        error: `IGDB API returned HTTP ${testRes.status}: ${errText || testRes.statusText}`,
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Connected to IGDB v4 API successfully! Unlimited high-res artwork search enabled.',
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: `Connection test error: ${err.message}`,
+    };
+  }
+});
+
 
 

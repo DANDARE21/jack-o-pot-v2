@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useSettings } from "../context/SettingsContext";
-import { useGame } from "../context/GameContext";
-import { useNavigation } from "../navigation/NavigationContext";
-import { useElectron } from "../hooks/useElectron";
+import { useSettings, useGame } from "@/context";
+import { useNavigation } from "@/navigation";
+import { useElectron } from "@/hooks";
 import { Howl } from "howler";
 import {
   SettingSection,
@@ -12,22 +11,20 @@ import {
   SettingSelect,
   SettingButton,
   SettingColorPicker,
-} from "../components/settings/SettingControls";
+} from "@/components/settings/SettingControls";
 import {
   BUILT_IN_PRESETS,
   getCustomPresets,
   addCustomPreset,
   deleteCustomPreset,
-} from "../services/presetService";
-import {
   COLOR_PALETTES,
   LOGO_TEXTURE_OPTIONS,
   getLogoTextureUrl,
-} from "../services/webglShader";
-import { UI_THEMES } from "../services/themeService";
-import FrequencySpectrumVisualizer from "../components/settings/FrequencySpectrumVisualizer";
+  UI_THEMES,
+} from "@/services";
+import { FrequencySpectrumVisualizer } from "@/components";
 import { Icon } from "@iconify/react";
-import "../components/settings/SettingsModal.css";
+import "@/components/settings/SettingsModal.css";
 import "./SettingsScreen.css";
 
 export default function SettingsScreen() {
@@ -55,7 +52,13 @@ export default function SettingsScreen() {
     toggleFullscreen,
     showNotification,
     electron,
+    testIgdbConnection,
   } = useElectron();
+
+  const [settingsIgdbClientId, setSettingsIgdbClientId] = useState(() => localStorage.getItem("jackopot_igdb_client_id") || "");
+  const [settingsIgdbClientSecret, setSettingsIgdbClientSecret] = useState(() => localStorage.getItem("jackopot_igdb_client_secret") || "");
+  const [settingsIgdbTesting, setSettingsIgdbTesting] = useState(false);
+  const [settingsIgdbNotice, setSettingsIgdbNotice] = useState(null);
 
   const totalCategories = Object.keys(gamesByCategory || {}).length;
   const totalGames = Object.values(gamesByCategory || {}).flat().length;
@@ -118,6 +121,44 @@ export default function SettingsScreen() {
         });
       })
       .catch(console.error);
+  };
+
+  const handleSaveSettingsIgdb = () => {
+    localStorage.setItem("jackopot_igdb_client_id", settingsIgdbClientId.trim());
+    localStorage.setItem("jackopot_igdb_client_secret", settingsIgdbClientSecret.trim());
+    setSettingsIgdbNotice({ type: "success", text: "IGDB API credentials saved locally!" });
+    showNotification({
+      title: "IGDB Settings Saved",
+      body: "IGDB credentials stored and active for automatic scraping.",
+    });
+  };
+
+  const handleTestSettingsIgdb = async () => {
+    if (!settingsIgdbClientId.trim() || !settingsIgdbClientSecret.trim()) {
+      setSettingsIgdbNotice({ type: "error", text: "Please enter both Client ID & Secret." });
+      return;
+    }
+    setSettingsIgdbTesting(true);
+    setSettingsIgdbNotice(null);
+    try {
+      if (testIgdbConnection) {
+        const res = await testIgdbConnection({
+          clientId: settingsIgdbClientId.trim(),
+          clientSecret: settingsIgdbClientSecret.trim(),
+        });
+        if (res?.success) {
+          setSettingsIgdbNotice({ type: "success", text: res.message || "Connected to IGDB v4!" });
+        } else {
+          setSettingsIgdbNotice({ type: "error", text: res?.error || "Connection failed." });
+        }
+      } else {
+        setSettingsIgdbNotice({ type: "success", text: "Keys stored." });
+      }
+    } catch (e) {
+      setSettingsIgdbNotice({ type: "error", text: e.message });
+    } finally {
+      setSettingsIgdbTesting(false);
+    }
   };
 
   const handleTestSound = () => {
@@ -371,6 +412,71 @@ export default function SettingsScreen() {
                     icon="game-icons:anticlockwise-rotation"
                     variant="secondary"
                     onClick={handleResetGames}
+                  />
+                </div>
+              </SettingRow>
+            </SettingSection>
+
+            <SettingSection
+              title="IGDB Game Database Scraper"
+              icon="game-icons:satellite-communication"
+              description="Connect to Twitch IGDB v4 to automatically scrape official game box art, 1080p screenshots, and metadata across all gaming platforms."
+            >
+              <SettingRow
+                title="Twitch Client ID"
+                description="OAuth client ID from twitch.tv/dev/console"
+                badge={settingsIgdbClientId.trim() ? "Configured" : "Missing"}
+              >
+                <input
+                  type="text"
+                  className="settings-text-input font-mono text-xs"
+                  style={{ width: "260px", background: "#000", border: "1px solid var(--ui-border)", color: "#fff", padding: "6px 10px" }}
+                  placeholder="e.g. gp762nvuo..."
+                  value={settingsIgdbClientId}
+                  onChange={(e) => setSettingsIgdbClientId(e.target.value)}
+                />
+              </SettingRow>
+
+              <SettingRow
+                title="Twitch Client Secret"
+                description="OAuth client secret for IGDB token generation"
+                badge={settingsIgdbClientSecret.trim() ? "Configured" : "Missing"}
+              >
+                <input
+                  type="password"
+                  className="settings-text-input font-mono text-xs"
+                  style={{ width: "260px", background: "#000", border: "1px solid var(--ui-border)", color: "#fff", padding: "6px 10px" }}
+                  placeholder="Client secret..."
+                  value={settingsIgdbClientSecret}
+                  onChange={(e) => setSettingsIgdbClientSecret(e.target.value)}
+                />
+              </SettingRow>
+
+              <SettingRow
+                title="Save & Test Connection"
+                description={
+                  settingsIgdbNotice ? (
+                    <span style={{ color: settingsIgdbNotice.type === "success" ? "#4ade80" : "#f87171" }}>
+                      {settingsIgdbNotice.text}
+                    </span>
+                  ) : (
+                    "Test connection against IGDB API and save keys"
+                  )
+                }
+              >
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <SettingButton
+                    label={settingsIgdbTesting ? "Testing..." : "Test IGDB"}
+                    icon="game-icons:satellite-communication"
+                    variant="secondary"
+                    onClick={handleTestSettingsIgdb}
+                    disabled={settingsIgdbTesting || !settingsIgdbClientId.trim()}
+                  />
+                  <SettingButton
+                    label="Save Credentials"
+                    icon="game-icons:check-mark"
+                    variant="primary"
+                    onClick={handleSaveSettingsIgdb}
                   />
                 </div>
               </SettingRow>

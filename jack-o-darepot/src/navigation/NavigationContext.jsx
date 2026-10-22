@@ -57,6 +57,13 @@ export function NavigationProvider({ initialScreen = SCREENS.GAME, children }) {
         } else {
           navigate(SCREENS.LEADERBOARD);
         }
+      } else if ((e.key === "m" || e.key === "M") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        if (currentScreen === SCREENS.MODIFIERS) {
+          goBack();
+        } else {
+          navigate(SCREENS.MODIFIERS);
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);

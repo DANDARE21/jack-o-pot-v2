@@ -138,6 +138,9 @@ export default function SlotReel({
               src={fixAssetPath(displayValue.image)}
               alt={rawText}
               className="reel-image-item"
+              onError={(e) => {
+                e.target.src = "/assets/images/placeholder.svg";
+              }}
             />
           ) : (
             <span className={`reel-text-item ${rawText.length > 14 ? "long-text" : ""}`}>

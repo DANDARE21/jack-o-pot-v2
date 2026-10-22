@@ -25,7 +25,101 @@ export async function searchGameDatabase(query, options = {}) {
     }
   }
 
-  // 2. Browser fallback: Steam Store Search
+  // 2. Browser fallback: IGDB (if credentials provided or forceProvider === 'igdb')
+  const { igdbClientId, igdbClientSecret, igdbAccessToken, forceProvider } = options;
+  if ((igdbClientId && (igdbClientSecret || igdbAccessToken)) || forceProvider === 'igdb') {
+    if (igdbClientId && (igdbClientSecret || igdbAccessToken)) {
+      try {
+        let token = igdbAccessToken;
+        if (!token && igdbClientSecret) {
+          const tokenUrl = `https://id.twitch.tv/oauth2/token?client_id=${encodeURIComponent(igdbClientId)}&client_secret=${encodeURIComponent(igdbClientSecret)}&grant_type=client_credentials`;
+          let tokenRes;
+          try {
+            tokenRes = await fetch(tokenUrl, { method: 'POST' });
+          } catch {
+            tokenRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(tokenUrl)}`, { method: 'POST' });
+          }
+          if (tokenRes && tokenRes.ok) {
+            const tokenJson = await tokenRes.json();
+            token = tokenJson.access_token;
+          }
+        }
+
+        if (token) {
+          const sanitized = cleanQuery.replace(/["\\;\n\r]/g, ' ').replace(/\s+/g, ' ').trim();
+          const igdbUrl = 'https://api.igdb.com/v4/games';
+          const bodyPayload = `search "${sanitized.replace(/"/g, '')}"; fields name, summary, cover.image_id, screenshots.image_id, artworks.image_id, genres.name, first_release_date, platforms.name, total_rating; limit 8;`;
+
+          let igdbRes;
+          try {
+            igdbRes = await fetch(igdbUrl, {
+              method: 'POST',
+              headers: {
+                'Client-ID': igdbClientId,
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+              },
+              body: bodyPayload,
+            });
+          } catch {
+            // Browser CORS fallback proxy
+            igdbRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(igdbUrl)}`, {
+              method: 'POST',
+              headers: {
+                'Client-ID': igdbClientId,
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+              },
+              body: bodyPayload,
+            });
+          }
+
+          if (igdbRes && igdbRes.ok) {
+            const games = await igdbRes.json();
+            if (Array.isArray(games) && games.length > 0) {
+              const results = games.map((g) => {
+                const coverUrl = g.cover?.image_id
+                  ? `https://images.igdb.com/igdb/image/upload/t_cover_big_2x/${g.cover.image_id}.jpg`
+                  : '';
+                const bannerUrl = g.artworks?.[0]?.image_id
+                  ? `https://images.igdb.com/igdb/image/upload/t_1080p/${g.artworks[0].image_id}.jpg`
+                  : g.screenshots?.[0]?.image_id
+                  ? `https://images.igdb.com/igdb/image/upload/t_1080p/${g.screenshots[0].image_id}.jpg`
+                  : coverUrl;
+
+                return {
+                  id: `igdb_${g.id}`,
+                  name: g.name,
+                  verticalArtwork: coverUrl,
+                  horizontalArtwork: bannerUrl,
+                  screenshots: (g.screenshots || []).map(
+                    (s) => `https://images.igdb.com/igdb/image/upload/t_1080p/${s.image_id}.jpg`
+                  ),
+                  background: bannerUrl || coverUrl,
+                  description: g.summary || '',
+                  releaseDate: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear().toString() : '',
+                  genres: (g.genres || []).map((genre) => genre.name),
+                  platforms: (g.platforms || []).map((p) => p.name),
+                  rating: g.total_rating ? Math.round(g.total_rating) : null,
+                  source: 'IGDB',
+                };
+              });
+
+              return { success: true, results, provider: 'IGDB' };
+            }
+          }
+        }
+      } catch (igdbErr) {
+        console.warn('Browser fallback IGDB search error:', igdbErr);
+      }
+    }
+
+    if (forceProvider === 'igdb') {
+      return { success: false, results: [], provider: 'IGDB', error: `No matches found on IGDB for "${cleanQuery}".` };
+    }
+  }
+
+  // 3. Browser fallback: Steam Store Search
   if (options.forceProvider !== 'open' && options.forceProvider !== 'igdb') {
     try {
       const searchUrl = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(cleanQuery)}&l=english&cc=US`;
@@ -89,11 +183,11 @@ export async function searchGameDatabase(query, options = {}) {
     }
   }
 
-  // 3. Browser fallback: Open Video Game Database (Wikipedia/Wikimedia API - completely open CORS)
+  // 4. Browser fallback: Open Video Game Database (Wikipedia/Wikimedia API - completely open CORS)
   try {
     const openUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=8&search=${encodeURIComponent(cleanQuery)}`;
     const openRes = await fetch(openUrl);
-    const [q, titles] = await openRes.json();
+    const [, titles] = await openRes.json();
 
     let candidateTitles = (titles || []).filter(
       (t) => !/film|album|song|soundtrack|novel|disease|virus|bacteria|syndrome|biology/i.test(t)

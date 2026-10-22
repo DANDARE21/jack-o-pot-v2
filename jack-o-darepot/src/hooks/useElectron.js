@@ -97,6 +97,13 @@ export function useElectron() {
     return null;
   };
 
+  const testIgdbConnection = async (credentials) => {
+    if (electron?.testIgdbConnection) {
+      return await electron.testIgdbConnection(credentials);
+    }
+    return { success: false, error: 'IGDB connection test requires Electron desktop app.' };
+  };
+
   return {
     isElectron,
     electron,
@@ -117,5 +124,6 @@ export function useElectron() {
     launchGame,
     openGameFolder,
     searchGameDatabase,
+    testIgdbConnection,
   };
 }

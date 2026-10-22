@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useSettings } from "../../context/SettingsContext";
-import { useGame } from "../../context/GameContext";
-import { useElectron } from "../../hooks/useElectron";
+import { useSettings, useGame } from "@/context";
+import { useElectron } from "@/hooks";
 import { Howl } from "howler";
 import { Icon } from "@iconify/react";
 import {

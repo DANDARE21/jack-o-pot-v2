@@ -1,6 +1,4 @@
-import React from "react";
-import AppHeader from "../components/layout/AppHeader";
-import SlotMachineHandler from "../components/SlotMachineHandler";
+import { AppHeader, SlotMachineHandler } from "@/components";
 
 export default function GameScreen() {
   return (

@@ -35,7 +35,7 @@ const CursedSlotMachine = forwardRef(
 
     // ✅ Spin sound
     const cursedSpinSound = new Howl({
-      src: ["/assets/sounds/cursed_spin.mp3"],
+      src: ["/assets/sounds/spin.mp3"],
       volume: 0.9,
     });
 

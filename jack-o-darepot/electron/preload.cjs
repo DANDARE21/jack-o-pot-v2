@@ -45,4 +45,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   launchGame: (options) => ipcRenderer.invoke('game:launch', options),
   openGameFolder: (executablePath) => ipcRenderer.invoke('game:open-folder', executablePath),
   searchGameDatabase: (query, options) => ipcRenderer.invoke('game:search-database', query, options),
+  testIgdbConnection: (credentials) => ipcRenderer.invoke('igdb:test-connection', credentials),
 });
